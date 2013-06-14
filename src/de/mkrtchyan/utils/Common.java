@@ -21,6 +21,17 @@ package de.mkrtchyan.utils;
  * SOFTWARE.
  */
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+
+import org.rootcommands.Shell;
+import org.rootcommands.Toolbox;
+import org.rootcommands.command.SimpleCommand;
+import org.rootcommands.util.BrokenBusyboxException;
+import org.rootcommands.util.RootAccessDeniedException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -32,21 +43,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.rootcommands.Shell;
-import org.rootcommands.Toolbox;
-import org.rootcommands.command.SimpleCommand;
-import org.rootcommands.util.BrokenBusyboxException;
-import org.rootcommands.util.RootAccessDeniedException;
-
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
-
 
 public class Common {
 
-	public File pushFileFromRAW(Context mContext, File outputfile, int RAW) {
+	public void pushFileFromRAW(Context mContext, File outputfile, int RAW) {
 	    if (!outputfile.exists()){
 		    try {
 		        InputStream is = mContext.getResources().openRawResource(RAW);
@@ -56,9 +56,10 @@ public class Common {
 		        os.write(data);
 		        is.close();
 		        os.close();
-		    } catch (IOException e) {}
+		    } catch (IOException e) {
+                new Notifyer(mContext).createToast(e.getMessage());
+            }
 	    }
-	    return outputfile;
 	}
 	
 	public boolean suRecognition() {
@@ -160,7 +161,7 @@ public class Common {
 			if (files[i].isDirectory() 
 					&& files[i].exists()){
 				if (Mount)
-					mountDir(new File("/" + files[i].getName().toString()), "RW");
+					mountDir(new File("/" + files[i].getName()), "RW");
 			}
 		}
 		executeShell("busybox mv -f " + Source.getAbsolutePath() + " " + Destination.getAbsolutePath());
@@ -249,8 +250,7 @@ public class Common {
 
 	public boolean getBooleanPerf(Context mContext, String PrefName, String key){
 		SharedPreferences prefs = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE);
-		boolean pref = prefs.getBoolean(key, false);
-		return pref;
+        return prefs.getBoolean(key, false);
 	}
 	
 	public void setBooleanPerf(Context mContext, String PrefName, String key, Boolean value) {

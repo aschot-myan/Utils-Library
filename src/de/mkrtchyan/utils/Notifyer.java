@@ -30,7 +30,8 @@ import android.widget.Toast;
 
 public class Notifyer {
 	
-	Context mContext;
+	private Context mContext;
+
 	public static Runnable rEmpty = new Runnable() {
 		@Override 
 		public void run() {

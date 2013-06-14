@@ -37,16 +37,16 @@ import android.os.AsyncTask;
 
 public class Downloader extends AsyncTask<Void, Integer, Boolean> {
 	
-	Context context;
-	String exString = "";
-	ProgressDialog downloadDialog;
-	ProgressDialog connectingDialog;
-	boolean first_start = true;
-	Runnable AfterDownload;
-	String URL;
-	String FileName;
-	File outputFile;
-	Notifyer nu;
+	private Context context;
+	private String exString = "";
+	private ProgressDialog downloadDialog;
+	private ProgressDialog connectingDialog;
+	private boolean first_start = true;
+	private Runnable AfterDownload;
+	private String URL;
+	private String FileName;
+	private File outputFile;
+	Notifyer mNotifyer;
 	
 	
 	public Downloader(Context context, String URL, String FileName, File outputFile, Runnable AfterDownload) {
@@ -55,7 +55,7 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
 		this.FileName = FileName;
 		this.outputFile = outputFile;
 		this.AfterDownload = AfterDownload;
-		nu = new Notifyer(context);
+		mNotifyer = new Notifyer(context);
 	}
 	
 	protected void onPreExecute(){
@@ -94,7 +94,7 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
 					byte[] buffer = new byte[1024];
 					int fullLenght = ucon.getContentLength();
 						
-					int bufferLength = 0;
+					int bufferLength;
 					int downloaded = 0;
 							
 					while ((bufferLength = inputStream.read(buffer)) > 0 ) {
@@ -149,9 +149,9 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
 		} else {
 			outputFile.delete();
 			if (!exString.equals("")) {
-				nu.createDialog(R.string.error, String.format(exString, R.string.failed_download), true);
+				mNotifyer.createDialog(R.string.error, String.format(exString, R.string.failed_download), true);
 			} else {
-				nu.createDialog(R.string.warning, R.string.noconnection, true, true);
+				mNotifyer.createDialog(R.string.warning, R.string.noconnection, true, true);
 			}
 		}
 	 }

@@ -1,5 +1,26 @@
 package de.mkrtchyan.utils;
 
+/*
+ * Copyright (c) 2013 Ashot Mkrtchyan
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights 
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+ * copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -15,19 +36,21 @@ public class FileChooser extends Dialog {
 	private static File currentPath;
 	public boolean use = false;
 	public File selectedFile;
-	TextView tvPath;
-	ListView lvFiles;
-	Context context;
-	String[] files;
-	int select;
-	Runnable runAtChoose;
+	final private TextView tvPath;
+	final private ListView lvFiles;
+	private Context mContext;
+	private String[] files;
+	private int select;
+	private Runnable runAtChoose;
+    private Notifyer mNotifyer;
 	
-	public FileChooser(final Context context, String StartPath, Runnable runAtChoose) {
-		super(context);
-		
+	public FileChooser(final Context mContext, String StartPath, Runnable runAtChoose) {
+		super(mContext);
+
+		mNotifyer = new Notifyer(mContext);
 		Start = new File(StartPath);
 		currentPath = Start;
-		this.context = context;
+		this.mContext = mContext;
 		this.runAtChoose = runAtChoose;
 		setContentView(R.layout.dialog_file_chooser);
 		setTitle(R.string.file_chooser);
@@ -48,7 +71,7 @@ public class FileChooser extends Dialog {
 						currentPath = selectedFile;
 						reload();
 					} else {
-						Toast.makeText(context, String.format(context.getString(R.string.empty_dir), selectedFile.getAbsolutePath()), Toast.LENGTH_SHORT).show();
+                        mNotifyer.createToast(currentPath.getAbsolutePath() + " is empty!");
 						currentPath = Start;
 						reload();
 					}
@@ -64,25 +87,28 @@ public class FileChooser extends Dialog {
 	public void reload() {
 		tvPath.setText(currentPath.getAbsolutePath());
 		files = currentPath.list();
-		
-		lvFiles.setAdapter(new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, files));
+		if (files.length <= 0) {
+            mNotifyer.createToast(currentPath.getAbsolutePath() + " is empty!");
+            //dirUp(null);
+        }
+		lvFiles.setAdapter(new ArrayAdapter<String>(mContext, android.R.layout.simple_list_item_1, files));
 	}
 	
 	public void fileSelected() {
-		AlertDialog.Builder abuilder = new AlertDialog.Builder(context);
-		abuilder
+		AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
+		mAlertDialog
 			.setTitle(R.string.warning)
-			.setMessage(String.format(context.getString(R.string.choose_message), selectedFile.getName()))
+			.setMessage(String.format(mContext.getString(R.string.choose_message), selectedFile.getName()))
 			.setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
-				
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					use = true;
-					runAtChoose.run();
-					use = false;
-					dismiss();
-				}
-			})
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    use = true;
+                    runAtChoose.run();
+                    use = false;
+                    dismiss();
+                }
+            })
 			.setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
 				
 				@Override
@@ -102,7 +128,7 @@ public class FileChooser extends Dialog {
 			.show();
 	}
 	
-	public Dialog getDialog() {
+	public FileChooser getDialog() {
 		return this;
 	}
 }
