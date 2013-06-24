@@ -49,7 +49,6 @@ public class Notifyer {
 		dialog.setTitle(Title);
 		dialog.setContentView(tv);
 		dialog.setCancelable(isCancelable);
-		dialog.show();
 		return dialog;
 	}
 	public Dialog createDialog(int Title, int Content, boolean isMessage, boolean isCancelable) {
@@ -64,104 +63,99 @@ public class Notifyer {
 			dialog.setContentView(Content);
 		}
 		dialog.setCancelable(isCancelable);
-		dialog.show();
 		return dialog;
 	}
-	public void createToast(int Message) {
+	public void showToast(int Message) {
 		Toast
 			.makeText(mContext, Message, Toast.LENGTH_LONG)
 			.show();
 	}
-	public void createToast(String Message) {
+	public void showToast(String Message) {
 		Toast
 			.makeText(mContext, Message, Toast.LENGTH_LONG)
 			.show();
 	}
 	public AlertDialog.Builder createAlertDialog(int Title, int Message, final Runnable runOnTrue) {
-		AlertDialog.Builder abuilder = new AlertDialog.Builder(mContext);
-		abuilder
+		AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
+		mAlertDialog
 			.setTitle(Title)
 			.setMessage(Message)
 			.setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
-			
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				
-				runOnTrue.run();
-			}
-		})
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    runOnTrue.run();
+                }
+            })
 			.setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
-			
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-			}
-		})
-			.show();
-		return abuilder;
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+		return mAlertDialog;
 	}
 	
 	public AlertDialog.Builder createAlertDialog(int Title, String Message, final Runnable runOnTrue) {
-		AlertDialog.Builder abuilder = new AlertDialog.Builder(mContext);
-		abuilder
+		AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
+		mAlertDialog
 			.setTitle(Title)
 			.setMessage(Message)
 			.setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
-			
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				
-				runOnTrue.run();
-			}
-		})
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    runOnTrue.run();
+                }
+            })
 			.setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
-			
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-			}
-		})
-			.show();
-		return abuilder;
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+		return mAlertDialog;
 	}
 	
 	public AlertDialog.Builder createAlertDialog(int Title, int Message, final Runnable runOnTrue, final Runnable runOnNeutral, final Runnable runOnNegative) {
-		AlertDialog.Builder abuilder = new AlertDialog.Builder(mContext);
-		abuilder
+		AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
+		mAlertDialog
 			.setTitle(Title)
 			.setMessage(Message);
 		
 		if (runOnTrue != null){
-			abuilder.setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
-			
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-				
-					runOnTrue.run();
-				}
-			}); 
+			mAlertDialog.setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    runOnTrue.run();
+                }
+            });
 		}
 		
 		if (runOnNegative != null){
-			abuilder.setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
-			
-				@Override
-					public void onClick(DialogInterface dialog, int which) {
-					runOnNegative.run();
-				}
-			});
+			mAlertDialog.setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    runOnNegative.run();
+                }
+            });
 		}
 		
 		if (runOnNeutral != null) {
-			abuilder.setNeutralButton(R.string.neutral, new DialogInterface.OnClickListener() {
-				
-				@Override
-				public void onClick(DialogInterface arg0, int arg1) {
-					runOnNeutral.run();
-				}
-			});
+			mAlertDialog.setNeutralButton(R.string.neutral, new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface arg0, int arg1) {
+                    runOnNeutral.run();
+                }
+            });
 		}
 		
-		abuilder.show();
-		
-		return abuilder;
+		return mAlertDialog;
 	}
 }

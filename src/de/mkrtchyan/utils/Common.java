@@ -46,216 +46,215 @@ import java.util.zip.ZipInputStream;
 
 public class Common {
 
-	public void pushFileFromRAW(Context mContext, File outputfile, int RAW) {
-	    if (!outputfile.exists()){
-		    try {
-		        InputStream is = mContext.getResources().openRawResource(RAW);
-		        OutputStream os = new FileOutputStream(outputfile);
-		        byte[] data = new byte[is.available()];
-		        is.read(data);
-		        os.write(data);
-		        is.close();
-		        os.close();
-		    } catch (IOException e) {
-                new Notifyer(mContext).createToast(e.getMessage());
+    public void pushFileFromRAW(Context mContext, File outputFile, int RAW) {
+        if (!outputFile.exists()) {
+            try {
+                InputStream is = mContext.getResources().openRawResource(RAW);
+                OutputStream os = new FileOutputStream(outputFile);
+                byte[] data = new byte[is.available()];
+                is.read(data);
+                os.write(data);
+                is.close();
+                os.close();
+            } catch (IOException e) {
+                new Notifyer(mContext).showToast("Something went wrong: " + e.getMessage());
             }
-	    }
-	}
-	
-	public boolean suRecognition() {
-		try {
-			Shell shell = Shell.startRootShell();
-	        Toolbox tb = new Toolbox(shell);
-	        return tb.isRootAccessGiven();
-		} catch (Exception e){
-			return false;
-		}
-	}
-	
-	public void checkFolder(File Folder) {
-		if (!Folder.exists()
-				|| !Folder.isDirectory()) {
-			Folder.mkdir();
-		}
-	}
-	
-	public void chmod(File file, String mod, boolean su) {
-		
-		Shell shell;
-		try{
-			if (su){
-				try {
-					shell = Shell.startRootShell();
-				} catch (RootAccessDeniedException e) {
-					e.printStackTrace();
-					shell = Shell.startShell();
-				}
-			} else {
-				shell = Shell.startShell();
-			}
-			Toolbox tb = new Toolbox(shell);
-			if (!tb.getFilePermissions(file.getAbsolutePath()).equals(mod))
-					tb.setFilePermissions(file.getAbsolutePath(), mod);
-		} catch (IOException e) {e.printStackTrace();} catch (TimeoutException e) {e.printStackTrace();}
-	}
-	
-	public void xdaProfile(Context mContext){
-		Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://forum.xda-developers.com/member.php?u=5116786"));
-		mContext.startActivity(browserIntent);
-	}
-	
-	public void unzip(File ZipFile, File OutputFolder) { 
-		
-		FileInputStream fin;
-		ZipInputStream zin;
-		ZipEntry ze = null; 
-		
-		try { 
-			fin = new FileInputStream(ZipFile); 
-			zin = new ZipInputStream(fin); 
-			
-			while ((ze = zin.getNextEntry()) != null) { 
-	
-				if(ze.isDirectory()) { 
-					checkFolder(new File(OutputFolder, ze.getName())); 
-				} else {
-					File file = new File(OutputFolder.getAbsolutePath(), ze.getName());
-					FileOutputStream fout = new FileOutputStream(file); 
-					for (int c = zin.read(); c != -1; c = zin.read()) { 
-						fout.write(c); 
-					} 
-					zin.closeEntry(); 
-					fout.close(); 
-				} 
-			} 
-			zin.close(); 
-		} catch(Exception e) {} 
-	
-	}
-	
-	public void deleteFolder(File Folder, boolean AndFolder){
-		if(Folder.exists()
-				&& Folder.isDirectory()) {
-			File[] files = Folder.listFiles();
-			for(int i = 0; i < files.length; i++) {
-				files[i].delete();
-			}
-			if (AndFolder)
-				Folder.delete();
-		}
-	}
-	
-	public void mountDir(File Dir, String mode) throws RootAccessDeniedException {
-		try {
-			Shell shell = Shell.startRootShell();
-			Toolbox tb = new Toolbox(shell);
-			tb.remount(Dir.getAbsolutePath(), mode);
-		} catch (IOException e) {e.printStackTrace();}
-	}
-	
-	public void copy(File Source, File Destination, boolean Mount) throws RootAccessDeniedException {
-		if (Mount)
-			mountDir(Destination, "RW");
-		File[] files = Source.listFiles();
-		for(int i = 0; i < files.length; i++) {
-			if (files[i].isDirectory() 
-					&& files[i].exists()){
-				if (Mount)
-					mountDir(new File("/" + files[i].getName()), "RW");
-			}
-		}
-		executeShell("busybox mv -f " + Source.getAbsolutePath() + " " + Destination.getAbsolutePath());
-		if (Mount)
-			mountDir(Destination, "RO");
-	}
-	
-	public String executeShell(String Command){
-		SimpleCommand command = new SimpleCommand(Command);
-		String output = "";
-			
-		try {
-			Shell shell = Shell.startShell();
-			shell.add(command).waitForFinish();
-			output = command.getOutput();
-		} catch (BrokenBusyboxException e) {e.printStackTrace();
-		} catch (TimeoutException e) {e.printStackTrace();
-		} catch (IOException e) {e.printStackTrace();
-		}
-		return output;
-	}
-	
-	public String executeShell(Context mContext, String Command){
-		SimpleCommand command = new SimpleCommand(Command);
-		try {
-			Shell shell = Shell.startShell();
-			shell.add(command).waitForFinish();
-		} catch (IOException e) {e.printStackTrace();} catch (TimeoutException e) {e.printStackTrace();}
-		String output = command.getOutput();
-		if (getBooleanPerf(mContext, "mkrtchyan_utils_common", "log-commands")){
-			
-			String CommandLog = "\nCommand:\n" + Command + 
-					"\n\nOutput:\n" +  output;
-			
-			FileOutputStream fo;
-			try {
-				fo = mContext.openFileOutput("su-logs.log", Context.MODE_APPEND);
-				fo.write(CommandLog.getBytes());
-			} catch (FileNotFoundException e) {e.printStackTrace();} catch (IOException e) {e.printStackTrace();}
-		}
-		return output;
-	}
-	
-	public String executeSuShell(String Command) throws RootAccessDeniedException {
-		String output = "";
-		try {
-			SimpleCommand command = new SimpleCommand(Command);
-			Shell shell = Shell.startRootShell();
-			shell.add(command).waitForFinish();
-			output = command.getOutput();
-		} catch (BrokenBusyboxException e) {e.printStackTrace();
-		} catch (TimeoutException e) {e.printStackTrace();
-		} catch (IOException e) {e.printStackTrace();
-		}
-		return output;
-	}
-	
-	public String executeSuShell(Context mContext, String Command) throws RootAccessDeniedException{
-		String output = "";
-		try {
-			SimpleCommand command = new SimpleCommand(Command);
-			Shell shell = Shell.startRootShell();
-			shell.add(command).waitForFinish();
-			output = command.getOutput();
-			if (getBooleanPerf(mContext, "mkrtchyan_utils_common", "log-commands")){
-				
-				String CommandLog = "\nCommand:\n\nSuperUser\n" + Command + 
-						"\n\nOutput:\n" +  output;
-				
-				FileOutputStream fo;
-				try {
-					File log = new File(mContext.getFilesDir(), "command-logs.log");
-					if (!log.exists())
-						log.createNewFile();
-					fo = mContext.openFileOutput(log.getName(), Context.MODE_APPEND);
-					fo.write(CommandLog.getBytes());
-				} catch (FileNotFoundException e) {
-					new Notifyer(mContext).createDialog(R.string.warning, e.getMessage(), true);
-					e.printStackTrace();}
-			}
-		} catch (BrokenBusyboxException ex) {ex.printStackTrace();
-		} catch (TimeoutException ex) {ex.printStackTrace();
-		} catch (IOException ex) {ex.printStackTrace();}
-		return output;
-	}
+        }
+    }
 
-	public boolean getBooleanPerf(Context mContext, String PrefName, String key){
-		SharedPreferences prefs = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE);
-        return prefs.getBoolean(key, false);
-	}
-	
-	public void setBooleanPerf(Context mContext, String PrefName, String key, Boolean value) {
-		SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
-		editor.putBoolean(key, value);
-		editor.commit();
-	}
+    public boolean suRecognition() {
+        try {
+            return new Toolbox(Shell.startRootShell()).isRootAccessGiven();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void checkFolder(File Folder) {
+        if (!Folder.exists()
+                || !Folder.isDirectory()) {
+            Folder.mkdir();
+        }
+    }
+
+    public void chmod(File file, String mod) {
+
+        try {
+            Toolbox tb = new Toolbox(Shell.startRootShell());
+            if (!tb.getFilePermissions(file.getAbsolutePath()).equals(mod)) {
+                tb.setFilePermissions(file.getAbsolutePath(), mod);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void xdaProfile(Context mContext) {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://forum.xda-developers.com/member.php?u=5116786"));
+        mContext.startActivity(browserIntent);
+    }
+
+    public void unzip(File ZipFile, File OutputFolder) throws IOException {
+
+        FileInputStream fin = new FileInputStream(ZipFile);
+        ZipInputStream zin = new ZipInputStream(fin);
+        ZipEntry ze = null;
+
+        while ((ze = zin.getNextEntry()) != null) {
+
+            if (ze.isDirectory()) {
+                checkFolder(new File(OutputFolder, ze.getName()));
+            } else {
+                File file = new File(OutputFolder.getAbsolutePath(), ze.getName());
+                FileOutputStream fout = new FileOutputStream(file);
+                for (int c = zin.read(); c != -1; c = zin.read()) {
+                    fout.write(c);
+                }
+                    zin.closeEntry();
+                    fout.close();
+            }
+        }
+        zin.close();
+    }
+
+    public void deleteFolder(File Folder, boolean AndFolder) {
+        if (Folder.exists()
+                && Folder.isDirectory()) {
+            File[] files = Folder.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                files[i].delete();
+            }
+            if (AndFolder)
+                Folder.delete();
+        }
+    }
+
+    public void mountDir(File Dir, String mode) throws RootAccessDeniedException {
+        try {
+            new Toolbox(Shell.startRootShell()).remount(Dir.getAbsolutePath(), mode);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void copy(File Source, File Destination, boolean Mount) throws RootAccessDeniedException {
+        if (Mount)
+            mountDir(Destination, "RW");
+        File[] files = Source.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isDirectory()
+                    && files[i].exists()) {
+                if (Mount)
+                    mountDir(new File(Destination.getAbsolutePath(), files[i].getName()), "RW");
+            }
+        }
+        executeSuShell("busybox mv -f " + Source.getAbsolutePath() + " " + Destination.getAbsolutePath());
+        if (Mount)
+            mountDir(Destination, "RO");
+    }
+
+    public String executeShell(String Command) {
+        SimpleCommand command = new SimpleCommand(Command);
+        String output = "";
+
+        try {
+            Shell.startShell().add(command).waitForFinish();
+            output = command.getOutput();
+        } catch (BrokenBusyboxException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return output;
+    }
+
+    public String executeShell(Context mContext, String Command) {
+        SimpleCommand command = new SimpleCommand(Command);
+        try {
+            Shell.startShell().add(command).waitForFinish();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+        String output = command.getOutput();
+        if (getBooleanPerf(mContext, "mkrtchyan_utils_common", "log-commands")) {
+
+            String CommandLog = "\nCommand:\n" + Command +
+                    "\n\nOutput:\n" + output;
+
+            FileOutputStream fo;
+            try {
+                fo = mContext.openFileOutput("su-logs.log", Context.MODE_APPEND);
+                fo.write(CommandLog.getBytes());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return output;
+    }
+
+    public String executeSuShell(String Command) throws RootAccessDeniedException {
+        SimpleCommand command = new SimpleCommand(Command);
+        String output = "";
+        try {
+            Shell.startRootShell().add(command).waitForFinish();
+            output = command.getOutput();
+        } catch (BrokenBusyboxException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return output;
+    }
+
+    public String executeSuShell(Context mContext, String Command) throws RootAccessDeniedException {
+        SimpleCommand command = new SimpleCommand(Command);
+        String output = "";
+        try {
+            Shell.startRootShell().add(command).waitForFinish();
+            output = command.getOutput();
+            if (getBooleanPerf(mContext, "mkrtchyan_utils_common", "log-commands")) {
+
+                String CommandLog = "\nCommand:\n\nSuperUser\n" + Command +
+                        "\n\nOutput:\n" + output;
+
+                try {
+                    File log = new File(mContext.getFilesDir(), "command-logs.log");
+                    if (!log.exists())
+                        log.createNewFile();
+                    FileOutputStream fo = mContext.openFileOutput(log.getName(), Context.MODE_APPEND);
+                    fo.write(CommandLog.getBytes());
+                } catch (FileNotFoundException e) {
+                    new Notifyer(mContext).createDialog(R.string.warning, e.getMessage(), true).show();
+                    e.printStackTrace();
+                }
+            }
+        } catch (BrokenBusyboxException ex) {
+            ex.printStackTrace();
+        } catch (TimeoutException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return output;
+    }
+
+    public boolean getBooleanPerf(Context mContext, String PrefName, String key) {
+        return mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).getBoolean(key, false);
+    }
+
+    public void setBooleanPerf(Context mContext, String PrefName, String key, Boolean value) {
+        SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
+        editor.putBoolean(key, value);
+        editor.commit();
+    }
 }
