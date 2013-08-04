@@ -13,4 +13,7 @@
     <string name="file_chooser">File Chooser</string>
     <string name="empty_dir">Directory empty: %s</string>
     <string name="choose_message">Choosing %s. Are you sure?</string>
+
+    <string name="ok">Ok</string>
+    <string name="noroot">"Device not Rooted. Please Root it. More information under xda-developer.com"</string>
 </resources>

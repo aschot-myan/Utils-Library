@@ -98,6 +98,7 @@ public class FileChooser extends Dialog {
     }
 
     public void fileSelected() {
+
         if (selectedFile.getName().endsWith(EXT)) {
             AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
             mAlertDialog
@@ -131,8 +132,10 @@ public class FileChooser extends Dialog {
                     })
                     .show();
         } else {
-            selectedFile = null;
-            mNotifyer.createDialog(R.string.warning, String.format(mContext.getString(R.string.wrong_format), EXT), true).show();
+            if (!EXT.equals("")) {
+                selectedFile = null;
+                mNotifyer.createDialog(R.string.warning, String.format(mContext.getString(R.string.wrong_format), EXT), true).show();
+            }
         }
     }
 }

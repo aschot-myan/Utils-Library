@@ -158,4 +158,38 @@ public class Notifyer {
 		
 		return mAlertDialog;
 	}
+
+    public void showRootDeniedDialog() {
+        AlertDialog.Builder abuilder = new AlertDialog.Builder(mContext);
+        abuilder
+                .setTitle(R.string.warning)
+                .setMessage(R.string.noroot)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        System.exit(0);
+                    }
+                })
+                .show();
+    }
+
+    public void showExceptionToast(Exception e) {
+        showToast("Something went wrong.. " + e.getMessage());
+    }
+
+    public Dialog createInputDialog(Context mContext, String Title, String Message) {
+        return new Dialog(mContext);
+    }
+
+    public Dialog createInputDialog(Context mContext, int Title, String Message) {
+        return new Dialog(mContext);
+    }
+
+    public Dialog createInputDialog(Context mContext, String Title, int Message) {
+        return new Dialog(mContext);
+    }
+
+    public Dialog createInputDialog(Context mContext, int Title, int Message) {
+        return new Dialog(mContext);
+    }
 }

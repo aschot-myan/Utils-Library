@@ -22,9 +22,7 @@ package de.mkrtchyan.utils;
  */
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 
 import org.rootcommands.Shell;
 import org.rootcommands.Toolbox;
@@ -84,16 +82,13 @@ public class Common {
             if (!tb.getFilePermissions(file.getAbsolutePath()).equals(mod)) {
                 tb.setFilePermissions(file.getAbsolutePath(), mod);
             }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
             e.printStackTrace();
         }
-    }
-
-    public void xdaProfile(Context mContext) {
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://forum.xda-developers.com/member.php?u=5116786"));
-        mContext.startActivity(browserIntent);
     }
 
     public void unzip(File ZipFile, File OutputFolder) throws IOException {
@@ -255,6 +250,16 @@ public class Common {
     public void setBooleanPerf(Context mContext, String PrefName, String key, Boolean value) {
         SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
         editor.putBoolean(key, value);
+        editor.commit();
+    }
+
+    public String getStringPerf(Context mContext, String PrefName, String key) {
+        return mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).getString(key, "");
+    }
+
+    public void setStringPerf(Context mContext, String PrefName, String key, String value) {
+        SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
+        editor.putString(key, value);
         editor.commit();
     }
 }
