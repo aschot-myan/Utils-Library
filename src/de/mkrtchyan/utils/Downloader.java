@@ -26,6 +26,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -37,6 +38,8 @@ import java.net.URLConnection;
 
 public class Downloader extends AsyncTask<Void, Integer, Boolean> {
 
+
+    private static final String TAG = "Downloader";
     private Context mContext;
     private String exString = "";
     private ProgressDialog downloadDialog;
@@ -62,6 +65,7 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
         connectingDialog.setCancelable(false);
         connectingDialog.setMessage(URL);
         connectingDialog.show();
+        Log.i(TAG, "Connecting to: " + URL);
         downloadDialog = new ProgressDialog(mContext);
         downloadDialog.setTitle(R.string.Downloading);
         downloadDialog.setMessage(URL + "/" + FileName);
@@ -94,6 +98,8 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
                     int bufferLength;
                     int downloaded = 0;
 
+                    Log.i(TAG, "Downloading: " + outputFile.getName());
+
                     while ((bufferLength = inputStream.read(buffer)) > 0) {
                         fileOutput.write(buffer, 0, bufferLength);
                         downloaded += bufferLength;
@@ -101,6 +107,8 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
                     }
 
                     fileOutput.close();
+
+                    Log.d(TAG, "Download finished!");
 
                 } catch (MalformedURLException e) {
                     e.printStackTrace();

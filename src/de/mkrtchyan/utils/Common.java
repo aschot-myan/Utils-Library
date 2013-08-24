@@ -23,16 +23,16 @@ package de.mkrtchyan.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
-import org.rootcommands.Shell;
-import org.rootcommands.Toolbox;
-import org.rootcommands.command.SimpleCommand;
-import org.rootcommands.util.BrokenBusyboxException;
-import org.rootcommands.util.RootAccessDeniedException;
+import org.sufficientlysecure.rootcommands.Shell;
+import org.sufficientlysecure.rootcommands.Toolbox;
+import org.sufficientlysecure.rootcommands.command.SimpleCommand;
+import org.sufficientlysecure.rootcommands.util.BrokenBusyboxException;
+import org.sufficientlysecure.rootcommands.util.RootAccessDeniedException;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,7 +55,7 @@ public class Common {
                 is.close();
                 os.close();
             } catch (IOException e) {
-                new Notifyer(mContext).showToast("Something went wrong: " + e.getMessage());
+                new Notifyer(mContext).showExceptionToast(e);
             }
         }
     }
@@ -78,10 +78,7 @@ public class Common {
     public void chmod(File file, String mod) {
 
         try {
-            Toolbox tb = new Toolbox(Shell.startRootShell());
-            if (!tb.getFilePermissions(file.getAbsolutePath()).equals(mod)) {
-                tb.setFilePermissions(file.getAbsolutePath(), mod);
-            }
+            new Toolbox(Shell.startRootShell()).setFilePermissions(file.getAbsolutePath(), mod);
         } catch (NullPointerException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -95,7 +92,7 @@ public class Common {
 
         FileInputStream fin = new FileInputStream(ZipFile);
         ZipInputStream zin = new ZipInputStream(fin);
-        ZipEntry ze = null;
+        ZipEntry ze;
 
         while ((ze = zin.getNextEntry()) != null) {
 
@@ -107,8 +104,8 @@ public class Common {
                 for (int c = zin.read(); c != -1; c = zin.read()) {
                     fout.write(c);
                 }
-                    zin.closeEntry();
-                    fout.close();
+                zin.closeEntry();
+                fout.close();
             }
         }
         zin.close();
@@ -119,7 +116,11 @@ public class Common {
                 && Folder.isDirectory()) {
             File[] files = Folder.listFiles();
             for (int i = 0; i < files.length; i++) {
-                files[i].delete();
+                if (files[i].isDirectory()) {
+                    deleteFolder(files[i], AndFolder);
+                } else {
+                    files[i].delete();
+                }
             }
             if (AndFolder)
                 Folder.delete();
@@ -134,7 +135,7 @@ public class Common {
         }
     }
 
-    public void copy(File Source, File Destination, boolean Mount) throws RootAccessDeniedException {
+    public void move(File Source, File Destination, boolean Mount) throws RootAccessDeniedException {
         if (Mount)
             mountDir(Destination, "RW");
         File[] files = Source.listFiles();
@@ -151,12 +152,13 @@ public class Common {
     }
 
     public String executeShell(String Command) {
-        SimpleCommand command = new SimpleCommand(Command);
-        String output = "";
+
 
         try {
+            SimpleCommand command = new SimpleCommand(Command);
             Shell.startShell().add(command).waitForFinish();
-            output = command.getOutput();
+            String output = command.getOutput();
+            return output;
         } catch (BrokenBusyboxException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
@@ -164,43 +166,41 @@ public class Common {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return output;
+        return "";
     }
 
     public String executeShell(Context mContext, String Command) {
-        SimpleCommand command = new SimpleCommand(Command);
         try {
+            SimpleCommand command = new SimpleCommand(Command);
             Shell.startShell().add(command).waitForFinish();
+            String output = command.getOutput();
+            if (getBooleanPerf(mContext, "mkrtchyan_utils_common", "log-commands")) {
+
+                String CommandLog = "\nCommand:\n" + Command + "\n\nOutput:\n" + output;
+
+                FileOutputStream fo;
+                fo = mContext.openFileOutput("su-logs.log", Context.MODE_APPEND);
+                fo.write(CommandLog.getBytes());
+            }
+            return output;
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
             e.printStackTrace();
         }
-        String output = command.getOutput();
-        if (getBooleanPerf(mContext, "mkrtchyan_utils_common", "log-commands")) {
 
-            String CommandLog = "\nCommand:\n" + Command +
-                    "\n\nOutput:\n" + output;
-
-            FileOutputStream fo;
-            try {
-                fo = mContext.openFileOutput("su-logs.log", Context.MODE_APPEND);
-                fo.write(CommandLog.getBytes());
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return output;
+        return "";
     }
 
     public String executeSuShell(String Command) throws RootAccessDeniedException {
-        SimpleCommand command = new SimpleCommand(Command);
-        String output = "";
         try {
+            String TAG = "executeSuShell";
+            SimpleCommand command = new SimpleCommand(Command);
             Shell.startRootShell().add(command).waitForFinish();
-            output = command.getOutput();
+            String output = command.getOutput();
+            Log.i(TAG, Command);
+            return output;
         } catch (BrokenBusyboxException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
@@ -208,31 +208,26 @@ public class Common {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return output;
+
+        return "";
     }
 
     public String executeSuShell(Context mContext, String Command) throws RootAccessDeniedException {
-        SimpleCommand command = new SimpleCommand(Command);
-        String output = "";
+
         try {
+            SimpleCommand command = new SimpleCommand(Command);
             Shell.startRootShell().add(command).waitForFinish();
-            output = command.getOutput();
+            String output = command.getOutput();
             if (getBooleanPerf(mContext, "mkrtchyan_utils_common", "log-commands")) {
 
-                String CommandLog = "\nCommand:\n\nSuperUser\n" + Command +
-                        "\n\nOutput:\n" + output;
-
-                try {
-                    File log = new File(mContext.getFilesDir(), "command-logs.log");
-                    if (!log.exists())
-                        log.createNewFile();
-                    FileOutputStream fo = mContext.openFileOutput(log.getName(), Context.MODE_APPEND);
-                    fo.write(CommandLog.getBytes());
-                } catch (FileNotFoundException e) {
-                    new Notifyer(mContext).createDialog(R.string.warning, e.getMessage(), true).show();
-                    e.printStackTrace();
-                }
+                String CommandLog = "\nCommand:\n\nsu -c " + Command + "\n\nOutput:\n" + output;
+                File log = new File(mContext.getFilesDir(), "command-logs.log");
+                if (!log.exists())
+                    log.createNewFile();
+                FileOutputStream fo = mContext.openFileOutput(log.getName(), Context.MODE_APPEND);
+                fo.write(CommandLog.getBytes());
             }
+            return output;
         } catch (BrokenBusyboxException ex) {
             ex.printStackTrace();
         } catch (TimeoutException ex) {
@@ -240,7 +235,7 @@ public class Common {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        return output;
+        return "";
     }
 
     public boolean getBooleanPerf(Context mContext, String PrefName, String key) {

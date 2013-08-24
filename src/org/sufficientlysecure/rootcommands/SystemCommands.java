@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.rootcommands;
+package org.sufficientlysecure.rootcommands;
 
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
@@ -36,7 +36,7 @@ public class SystemCommands {
 
     /**
      * Get GPS status
-     * 
+     *
      * @return
      */
     public boolean getGPS() {
@@ -46,7 +46,7 @@ public class SystemCommands {
 
     /**
      * Enable/Disable GPS
-     * 
+     *
      * @param value
      */
     @TargetApi(8)
@@ -72,7 +72,7 @@ public class SystemCommands {
     /**
      * Reboot the device immediately, passing 'reason' (may be null) to the underlying __reboot
      * system call. Should not return.
-     * 
+     *
      * Taken from com.android.server.PowerManagerService.reboot
      */
     // public void reboot(String reason) {

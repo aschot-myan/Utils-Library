@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-package org.rootcommands.command;
+package org.sufficientlysecure.rootcommands.command;
+
+import org.sufficientlysecure.rootcommands.RootCommands;
+import org.sufficientlysecure.rootcommands.Shell;
+import org.sufficientlysecure.rootcommands.util.BrokenBusyboxException;
+import org.sufficientlysecure.rootcommands.util.Log;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.TimeoutException;
-
-import org.rootcommands.RootCommands;
-import org.rootcommands.Shell;
-import org.rootcommands.util.BrokenBusyboxException;
-import org.rootcommands.util.Log;
 
 public abstract class Command {
     final String command[];
@@ -46,7 +46,7 @@ public abstract class Command {
 
     /**
      * This is called from Shell after adding it
-     * 
+     *
      * @param shell
      * @param id
      */
@@ -57,7 +57,7 @@ public abstract class Command {
 
     /**
      * Gets command string executed on the shell
-     * 
+     *
      * @return
      */
     public String getCommand() {
@@ -119,7 +119,7 @@ public abstract class Command {
 
     /**
      * Close the shell
-     * 
+     *
      * @param reason
      */
     public void terminate(String reason) {
@@ -138,10 +138,10 @@ public abstract class Command {
 
     /**
      * Waits for this command to finish and forwards exitCode into afterExecution method
-     * 
+     *
      * @param timeout
      * @throws java.util.concurrent.TimeoutException
-     * @throws org.rootcommands.util.BrokenBusyboxException
+     * @throws org.sufficientlysecure.rootcommands.util.BrokenBusyboxException
      */
     public void waitForFinish() throws TimeoutException, BrokenBusyboxException {
         synchronized (this) {

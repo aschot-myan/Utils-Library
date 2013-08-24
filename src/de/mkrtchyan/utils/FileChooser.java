@@ -88,16 +88,21 @@ public class FileChooser extends Dialog {
         show();
     }
 
-    public void reload() {
-        tvPath.setText(currentPath.getAbsolutePath());
-        files = currentPath.list();
-        if (files.length <= 0) {
-            mNotifyer.showToast(currentPath.getAbsolutePath() + " is empty!");
+    private void reload() {
+        try {
+            tvPath.setText(currentPath.getAbsolutePath());
+            files = currentPath.list();
+            if (files.length <= 0) {
+                mNotifyer.showToast(currentPath.getAbsolutePath() + " is empty!");
+            }
+            lvFiles.setAdapter(new ArrayAdapter<String>(mContext, android.R.layout.simple_list_item_1, files));
+        } catch (NullPointerException e) {
+            mNotifyer.showExceptionToast(e);
+            this.dismiss();
         }
-        lvFiles.setAdapter(new ArrayAdapter<String>(mContext, android.R.layout.simple_list_item_1, files));
     }
 
-    public void fileSelected() {
+    private void fileSelected() {
 
         if (selectedFile.getName().endsWith(EXT)) {
             AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);

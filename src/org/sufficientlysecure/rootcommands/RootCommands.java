@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.rootcommands;
+package org.sufficientlysecure.rootcommands;
 
-import org.rootcommands.util.Log;
+import org.sufficientlysecure.rootcommands.util.Log;
 
 public class RootCommands {
     public static boolean DEBUG = false;
@@ -26,7 +26,7 @@ public class RootCommands {
 
     /**
      * General method to check if user has su binary and accepts root access for this program!
-     * 
+     *
      * @return true if everything worked
      */
     public static boolean rootAccessGiven() {

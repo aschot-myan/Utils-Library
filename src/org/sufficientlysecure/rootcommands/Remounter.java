@@ -15,16 +15,17 @@
  * limitations under the License.
  */
 
-package org.rootcommands;
+package org.sufficientlysecure.rootcommands;
+
+import org.sufficientlysecure.rootcommands.command.SimpleCommand;
+import org.sufficientlysecure.rootcommands.util.Log;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
-
-import org.rootcommands.command.SimpleCommand;
-import org.rootcommands.util.Log;
+import java.util.Locale;
 
 //no modifier, this means it is package-private. Only our internal classes can use this.
 class Remounter {
@@ -44,13 +45,11 @@ class Remounter {
      * "/system/bin/some/directory/that/really/would/never/exist" will result in /system ultimately
      * being remounted. However, keep in mind that the longer the path you supply, the more work
      * this has to do, and the slower it will run.
-     * 
-     * @param file
-     *            file path
-     * @param mountType
-     *            mount type: pass in RO (Read only) or RW (Read Write)
+     *
+     * @param file      file path
+     * @param mountType mount type: pass in RO (Read only) or RW (Read Write)
      * @return a <code>boolean</code> which indicates whether or not the partition has been
-     *         remounted as specified.
+     * remounted as specified.
      */
     protected boolean remount(String file, String mountType) {
 
@@ -85,23 +84,23 @@ class Remounter {
         }
         Mount mountPoint = findMountPointRecursive(file);
 
-        Log.d(RootCommands.TAG, "Remounting " + mountPoint.getMountPoint().getAbsolutePath() + " as "
-                + mountType.toLowerCase());
-        final boolean isMountMode = mountPoint.getFlags().contains(mountType.toLowerCase());
+        Log.d(RootCommands.TAG, "Remounting " + mountPoint.getMountPoint().getAbsolutePath()
+                + " as " + mountType.toLowerCase(Locale.US));
+        final boolean isMountMode = mountPoint.getFlags().contains(mountType.toLowerCase(Locale.US));
 
         if (!isMountMode) {
             // grab an instance of the internal class
             try {
                 SimpleCommand command = new SimpleCommand("busybox mount -o remount,"
-                        + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath()
+                        + mountType.toLowerCase(Locale.US) + " " + mountPoint.getDevice().getAbsolutePath()
                         + " " + mountPoint.getMountPoint().getAbsolutePath(),
-                        "toolbox mount -o remount," + mountType.toLowerCase() + " "
+                        "toolbox mount -o remount," + mountType.toLowerCase(Locale.US) + " "
                                 + mountPoint.getDevice().getAbsolutePath() + " "
                                 + mountPoint.getMountPoint().getAbsolutePath(), "mount -o remount,"
-                                + mountType.toLowerCase() + " "
-                                + mountPoint.getDevice().getAbsolutePath() + " "
-                                + mountPoint.getMountPoint().getAbsolutePath(),
-                        "/system/bin/toolbox mount -o remount," + mountType.toLowerCase() + " "
+                        + mountType.toLowerCase(Locale.US) + " "
+                        + mountPoint.getDevice().getAbsolutePath() + " "
+                        + mountPoint.getMountPoint().getAbsolutePath(),
+                        "/system/bin/toolbox mount -o remount," + mountType.toLowerCase(Locale.US) + " "
                                 + mountPoint.getDevice().getAbsolutePath() + " "
                                 + mountPoint.getMountPoint().getAbsolutePath());
 
@@ -114,8 +113,8 @@ class Remounter {
             mountPoint = findMountPointRecursive(file);
         }
 
-        Log.d(RootCommands.TAG, mountPoint.getFlags() + " AND " + mountType.toLowerCase());
-        if (mountPoint.getFlags().contains(mountType.toLowerCase())) {
+        Log.d(RootCommands.TAG, mountPoint.getFlags() + " AND " + mountType.toLowerCase(Locale.US));
+        if (mountPoint.getFlags().contains(mountType.toLowerCase(Locale.US))) {
             Log.d(RootCommands.TAG, mountPoint.getFlags().toString());
             return true;
         } else {
@@ -127,7 +126,7 @@ class Remounter {
     private Mount findMountPointRecursive(String file) {
         try {
             ArrayList<Mount> mounts = getMounts();
-            for (File path = new File(file); path != null;) {
+            for (File path = new File(file); path != null; ) {
                 for (Mount mount : mounts) {
                     if (mount.getMountPoint().equals(path)) {
                         return mount;
@@ -148,14 +147,23 @@ class Remounter {
      * property's: device mountPoint type flags
      * <p/>
      * These will provide you with any information you need to work with the mount points.
-     * 
+     *
      * @return <code>ArrayList<Mount></code> an ArrayList of the class Mount.
-     * @throws Exception
-     *             if we cannot return the mount points.
+     * @throws Exception if we cannot return the mount points.
      */
     protected static ArrayList<Mount> getMounts() throws Exception {
+
+        final String tempFile = "/data/local/RootToolsMounts";
+
+        // copy /proc/mounts to tempfile. Directly reading it does not work on 4.3
+        Shell shell = Shell.startRootShell();
+        Toolbox tb = new Toolbox(shell);
+        tb.copyFile("/proc/mounts", tempFile, false, false);
+        tb.setFilePermissions(tempFile, "777");
+        shell.close();
+
         LineNumberReader lnr = null;
-        lnr = new LineNumberReader(new FileReader("/proc/mounts"));
+        lnr = new LineNumberReader(new FileReader(tempFile));
         String line;
         ArrayList<Mount> mounts = new ArrayList<Mount>();
         while ((line = lnr.readLine()) != null) {

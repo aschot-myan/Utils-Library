@@ -15,7 +15,12 @@
  * limitations under the License.
  */
 
-package org.rootcommands;
+package org.sufficientlysecure.rootcommands;
+
+import org.sufficientlysecure.rootcommands.command.Command;
+import org.sufficientlysecure.rootcommands.util.Log;
+import org.sufficientlysecure.rootcommands.util.RootAccessDeniedException;
+import org.sufficientlysecure.rootcommands.util.Utils;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -24,13 +29,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
-
-import org.rootcommands.command.Command;
-import org.rootcommands.command.SimpleCommand;
-import org.rootcommands.util.Log;
-import org.rootcommands.util.RootAccessDeniedException;
-import org.rootcommands.util.Utils;
 
 public class Shell implements Closeable {
     private final Process shellProcess;
@@ -44,7 +42,7 @@ public class Shell implements Closeable {
 
     /**
      * Start root shell
-     * 
+     *
      * @param customEnv
      * @param baseDirectory
      * @return
@@ -68,7 +66,7 @@ public class Shell implements Closeable {
 
     /**
      * Start root shell without custom environment and base directory
-     * 
+     *
      * @return
      * @throws java.io.IOException
      */
@@ -78,7 +76,7 @@ public class Shell implements Closeable {
 
     /**
      * Start default sh shell
-     * 
+     *
      * @param customEnv
      * @param baseDirectory
      * @return
@@ -93,7 +91,7 @@ public class Shell implements Closeable {
 
     /**
      * Start default sh shell without custom environment and base directory
-     * 
+     *
      * @return
      * @throws java.io.IOException
      */
@@ -103,7 +101,7 @@ public class Shell implements Closeable {
 
     /**
      * Start custom shell defined by shellPath
-     * 
+     *
      * @param shellPath
      * @param customEnv
      * @param baseDirectory
@@ -111,7 +109,7 @@ public class Shell implements Closeable {
      * @throws java.io.IOException
      */
     public static Shell startCustomShell(String shellPath, ArrayList<String> customEnv,
-            String baseDirectory) throws IOException {
+                                         String baseDirectory) throws IOException {
         Log.d(RootCommands.TAG, "Starting Custom Shell!");
         Shell shell = new Shell(shellPath, customEnv, baseDirectory);
 
@@ -120,7 +118,7 @@ public class Shell implements Closeable {
 
     /**
      * Start custom shell without custom environment and base directory
-     * 
+     *
      * @param shellPath
      * @return
      * @throws java.io.IOException
@@ -206,7 +204,7 @@ public class Shell implements Closeable {
     /**
      * Writes queued commands one after another into the opened shell. After an execution a token is
      * written to seperate command output on read
-     * 
+     *
      * @throws java.io.IOException
      */
     private void writeCommands() throws IOException {
@@ -242,7 +240,7 @@ public class Shell implements Closeable {
 
     /**
      * Reads output line by line, seperated by token written after every command
-     * 
+     *
      * @throws java.io.IOException
      * @throws InterruptedException
      */
@@ -306,7 +304,7 @@ public class Shell implements Closeable {
 
     /**
      * Add command to shell queue
-     * 
+     *
      * @param command
      * @return
      * @throws java.io.IOException
@@ -326,7 +324,7 @@ public class Shell implements Closeable {
 
     /**
      * Close shell
-     * 
+     *
      * @throws java.io.IOException
      */
     public void close() throws IOException {
@@ -338,26 +336,11 @@ public class Shell implements Closeable {
 
     /**
      * Returns number of queued commands
-     * 
+     *
      * @return
      */
     public int getCommandsSize() {
         return commands.size();
     }
-    
-    public String executeShell(String Command, boolean su){
-		SimpleCommand command = new SimpleCommand(Command);
-		try {
-			Shell shell;
-			if (su){
-				shell = Shell.startRootShell();
-			} else {
-				shell = Shell.startShell();
-			}
-			shell.add(command).waitForFinish();
-		} catch (RootAccessDeniedException e) {} catch (IOException e) {} catch (TimeoutException e) {}
-		
-		return command.getOutput();
-	}
 
 }
