@@ -153,7 +153,6 @@ public class Common {
 
     public String executeShell(String Command) {
 
-
         try {
             SimpleCommand command = new SimpleCommand(Command);
             Shell.startShell().add(command).waitForFinish();
@@ -178,8 +177,7 @@ public class Common {
 
                 String CommandLog = "\nCommand:\n" + Command + "\n\nOutput:\n" + output;
 
-                FileOutputStream fo;
-                fo = mContext.openFileOutput("su-logs.log", Context.MODE_APPEND);
+                FileOutputStream fo = mContext.openFileOutput("su-logs.log", Context.MODE_APPEND);
                 fo.write(CommandLog.getBytes());
             }
             return output;

@@ -68,7 +68,7 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
         Log.i(TAG, "Connecting to: " + URL);
         downloadDialog = new ProgressDialog(mContext);
         downloadDialog.setTitle(R.string.Downloading);
-        downloadDialog.setMessage(URL + "/" + FileName);
+        downloadDialog.setMessage(FileName);
         downloadDialog.setCancelable(false);
     }
 
