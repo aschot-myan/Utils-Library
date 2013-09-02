@@ -1,4 +1,7 @@
 <resources>
+    <string name="corrupt_download">Downloaded file is corrupted.</string>
+    <string name="try_again">Try again!</string>
+    <string name="later">Later</string>
     <string name="Downloading">Downloading&#8230;</string>
     <string name="wrong_format">You have choose a false file. The File must be in %s format.
     </string>

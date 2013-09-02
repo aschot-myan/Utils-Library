@@ -370,7 +370,6 @@ public class Toolbox {
 
     /**
      * @param file           String that represent the file, including the full path to the file and its name.
-     * @param followSymlinks
      * @return File permissions as String, for example: 777, returns null on error
      * @throws java.io.IOException
      * @throws java.util.concurrent.TimeoutException
@@ -449,7 +448,7 @@ public class Toolbox {
      * @param source                 example: /data/data/org.adaway/files/hosts
      * @param destination            example: /system/etc/hosts
      * @param remountAsRw            remounts the destination as read/write before writing to it
-     * @param preserveFileAttributes tries to copy file attributes from source to destination, if only cat is available
+     * @param preservePermissions    tries to copy file attributes from source to destination, if only cat is available
      *                               only permissions are preserved
      * @return true if it was successfully copied
      * @throws org.sufficientlysecure.rootcommands.util.BrokenBusyboxException
@@ -716,7 +715,7 @@ public class Toolbox {
     /**
      * This will tell you how the specified mount is mounted. rw, ro, etc...
      *
-     * @param The mount you want to check
+     * @param path The mount you want to check
      * @return <code>String</code> What the mount is mounted as.
      * @throws Exception if we cannot determine how the mount is mounted.
      */

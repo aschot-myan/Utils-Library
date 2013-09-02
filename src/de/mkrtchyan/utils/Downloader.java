@@ -21,8 +21,10 @@ package de.mkrtchyan.utils;
  * SOFTWARE.
  */
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -49,6 +51,8 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
     private String URL;
     private String FileName;
     private File outputFile;
+    private boolean checkFile = false;
+    private File SampleCorruptFile;
 
     public Downloader(Context mContext, String URL, String FileName, File outputFile, Runnable AfterDownload) {
         this.mContext = mContext;
@@ -56,6 +60,22 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
         this.FileName = FileName;
         this.outputFile = outputFile;
         this.AfterDownload = AfterDownload;
+    }
+
+    public void setCheckFile(boolean checkFile) {
+        this.checkFile = checkFile;
+    }
+
+    public boolean isFileCheckEnabled() {
+        return checkFile;
+    }
+
+    public void setSampleCorruptFile(File SampleCorruptFile) {
+        this.SampleCorruptFile = SampleCorruptFile;
+    }
+
+    public File getSampleCorruptFile() {
+        return SampleCorruptFile;
     }
 
     protected void onPreExecute() {
@@ -149,15 +169,65 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
         if (downloadDialog.isShowing())
             downloadDialog.dismiss();
         if (success) {
-            AfterDownload.run();
-        } else {
-            outputFile.delete();
-            Notifyer mNotifyer = new Notifyer(mContext);
-            if (!exString.equals("")) {
-                mNotifyer.createDialog(R.string.error, String.format(exString, R.string.failed_download), true).show();
+            if (checkFile) {
+                if (isDowloadCorrupt()) {
+                    outputFile.delete();
+                    loop();
+                } else {
+                    if (AfterDownload != null)
+                        AfterDownload.run();
+                }
             } else {
-                mNotifyer.createDialog(R.string.warning, R.string.noconnection, true, true).show();
+                if (AfterDownload != null)
+                    AfterDownload.run();
             }
+        } else {
+
+                outputFile.delete();
+                Notifyer mNotifyer = new Notifyer(mContext);
+                if (!exString.equals("")) {
+                    if (checkFile) {
+                        if (isDowloadCorrupt()) {
+                            outputFile.delete();
+                            loop();
+                        } else {
+                            if (AfterDownload != null)
+                                AfterDownload.run();
+                        }
+                    } else {
+                        mNotifyer.createDialog(R.string.error, String.format(exString, R.string.failed_download), true).show();
+                    }
+                } else {
+                    mNotifyer.createDialog(R.string.warning, R.string.noconnection, true, true).show();
+                }
+
         }
+    }
+
+    public boolean isDowloadCorrupt() {
+        Common mCommon = new Common();
+        return outputFile.length() == SampleCorruptFile.length();
+    }
+
+    private void loop() {
+        final AlertDialog.Builder tryAgain = new AlertDialog.Builder(mContext);
+        tryAgain
+                .setMessage(R.string.corrupt_download)
+                .setPositiveButton(R.string.try_again, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Downloader loop_downloader = new Downloader(mContext, URL, FileName, outputFile, AfterDownload);
+                        loop_downloader.setCheckFile(isFileCheckEnabled());
+                        loop_downloader.setSampleCorruptFile(SampleCorruptFile);
+                        loop_downloader.execute();
+                    }
+                })
+                .setNegativeButton(R.string.later, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                    }
+                })
+                .setTitle(R.string.warning)
+                .show();
     }
 }

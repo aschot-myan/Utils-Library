@@ -62,7 +62,6 @@ public class FileChooser extends Dialog {
 
         tvPath = (TextView) findViewById(R.id.tvPath);
         lvFiles = (ListView) findViewById(R.id.lvFiles);
-        reload();
 
         lvFiles.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -85,7 +84,6 @@ public class FileChooser extends Dialog {
                 }
             }
         });
-        show();
     }
 
     private void reload() {
@@ -142,5 +140,10 @@ public class FileChooser extends Dialog {
                 mNotifyer.createDialog(R.string.warning, String.format(mContext.getString(R.string.wrong_format), EXT), true).show();
             }
         }
+    }
+
+    public void show() {
+        super.show();
+        reload();
     }
 }
