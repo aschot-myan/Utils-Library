@@ -38,14 +38,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
-public class Downloader extends AsyncTask<Void, Integer, Boolean> {
+import de.mkrtchyan.utils.R;
 
+public class Downloader extends AsyncTask<Void, Integer, Boolean> {
 
     private static final String TAG = "Downloader";
     private Context mContext;
     private String exString = "";
     private ProgressDialog downloadDialog;
-    private ProgressDialog connectingDialog;
     private boolean first_start = true;
     private Runnable AfterDownload;
     private String URL;
@@ -79,17 +79,13 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
     }
 
     protected void onPreExecute() {
-        connectingDialog = new ProgressDialog(mContext);
-        connectingDialog.setTitle("Connecting to..");
-        connectingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        connectingDialog.setCancelable(false);
-        connectingDialog.setMessage(URL);
-        connectingDialog.show();
-        Log.i(TAG, "Connecting to: " + URL);
         downloadDialog = new ProgressDialog(mContext);
-        downloadDialog.setTitle(R.string.Downloading);
-        downloadDialog.setMessage(FileName);
+        downloadDialog.setTitle("Connecting to..");
+        downloadDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         downloadDialog.setCancelable(false);
+        downloadDialog.setMessage(URL);
+        downloadDialog.show();
+        Log.i(TAG, "Connecting to: " + URL);
     }
 
     protected Boolean doInBackground(Void... params) throws NullPointerException {
@@ -150,7 +146,9 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
     protected void onProgressUpdate(Integer... progress) {
         super.onProgressUpdate(progress);
         if (first_start) {
-            connectingDialog.dismiss();
+            downloadDialog.setTitle(R.string.Downloading);
+            downloadDialog.setMessage(FileName);
+            downloadDialog.setCancelable(false);
             if (progress[1] >= 0) {
                 downloadDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             } else {
@@ -164,8 +162,6 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
     }
 
     protected void onPostExecute(Boolean success) {
-        if (connectingDialog.isShowing())
-            connectingDialog.dismiss();
         if (downloadDialog.isShowing())
             downloadDialog.dismiss();
         if (success) {

@@ -255,4 +255,14 @@ public class Common {
         editor.putString(key, value);
         editor.commit();
     }
+
+	public Integer getIntegerPerf(Context mContext, String PrefName, String key) {
+		return mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).getInt(key, 0);
+	}
+
+	public void setIntegerPerf(Context mContext, String PrefName, String key, int value) {
+		SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
+		editor.putInt(key, value);
+		editor.commit();
+	}
 }

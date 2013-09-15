@@ -134,11 +134,9 @@ public class FileChooser extends Dialog {
                         }
                     })
                     .show();
-        } else {
-            if (!EXT.equals("")) {
+        } else if (!EXT.equals("")) {
                 selectedFile = null;
                 mNotifyer.createDialog(R.string.warning, String.format(mContext.getString(R.string.wrong_format), EXT), true).show();
-            }
         }
     }
 
