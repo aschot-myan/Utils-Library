@@ -28,8 +28,11 @@ import android.content.DialogInterface;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.devspark.appmsg.AppMsg;
 
 import java.io.File;
 
@@ -37,8 +40,8 @@ public class FileChooser extends Dialog {
 
     private static File Start;
     private static File currentPath;
-    public boolean use = false;
-    public File selectedFile;
+    private boolean use = false;
+    private File selectedFile;
     final private TextView tvPath;
     final private ListView lvFiles;
     private Context mContext;
@@ -75,7 +78,7 @@ public class FileChooser extends Dialog {
                         currentPath = selectedFile;
                         reload();
                     } else {
-                        mNotifyer.showToast(currentPath.getAbsolutePath() + " is empty!");
+                        mNotifyer.showToast(currentPath.getAbsolutePath() + " is empty!", AppMsg.STYLE_INFO);
                         currentPath = Start;
                         reload();
                     }
@@ -91,7 +94,7 @@ public class FileChooser extends Dialog {
             tvPath.setText(currentPath.getAbsolutePath());
             files = currentPath.list();
             if (files.length <= 0) {
-                mNotifyer.showToast(currentPath.getAbsolutePath() + " is empty!");
+                mNotifyer.showToast(currentPath.getAbsolutePath() + " is empty!", AppMsg.STYLE_INFO);
             }
             lvFiles.setAdapter(new ArrayAdapter<String>(mContext, android.R.layout.simple_list_item_1, files));
         } catch (NullPointerException e) {
@@ -143,5 +146,16 @@ public class FileChooser extends Dialog {
     public void show() {
         super.show();
         reload();
+    }
+
+    public LinearLayout getLayout() {
+        return (LinearLayout) findViewById(R.layout.dialog_file_chooser);
+    }
+
+    public boolean isChoosed() {
+        return use;
+    }
+    public File getSelectedFile() {
+        return selectedFile;
     }
 }

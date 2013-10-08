@@ -25,14 +25,17 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.view.Gravity;
+import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.devspark.appmsg.AppMsg;
 
 public class Notifyer {
 
     private Context mContext;
 
-    public static Runnable rEmpty = new Runnable() {
+    public static final Runnable rEmpty = new Runnable() {
         @Override
         public void run() {
 
@@ -46,10 +49,12 @@ public class Notifyer {
     public Dialog createDialog(int Title, String Message, boolean isCancelable) {
         TextView tv = new TextView(mContext);
         tv.setTextSize(20);
+	    ScrollView scrollView = new ScrollView(mContext);
+	    scrollView.addView(tv);
         tv.setText(Message);
         Dialog dialog = new Dialog(mContext);
         dialog.setTitle(Title);
-        dialog.setContentView(tv);
+        dialog.setContentView(scrollView);
         dialog.setCancelable(isCancelable);
         return dialog;
     }
@@ -58,8 +63,10 @@ public class Notifyer {
         Dialog dialog = new Dialog(mContext);
         dialog.setTitle(Title);
         if (isMessage) {
+	        ScrollView scrollView = new ScrollView(mContext);
             TextView tv = new TextView(mContext);
-            dialog.setContentView(tv);
+	        scrollView.addView(tv);
+            dialog.setContentView(scrollView);
             tv.setTextSize(20);
             tv.setText(Content);
         } else {
@@ -69,16 +76,18 @@ public class Notifyer {
         return dialog;
     }
 
-    public void showToast(int Message) {
-        Toast
-                .makeText(mContext, Message, Toast.LENGTH_LONG)
-                .show();
+    public void showToast(int Message, AppMsg.Style Style) {
+        AppMsg mAppMsg = AppMsg.makeText((android.app.Activity)mContext, Message, Style);
+        mAppMsg.setDuration(AppMsg.LENGTH_SHORT);
+        mAppMsg.setLayoutGravity(Gravity.BOTTOM);
+        mAppMsg.show();
     }
 
-    public void showToast(String Message) {
-        Toast
-                .makeText(mContext, Message, Toast.LENGTH_LONG)
-                .show();
+    public void showToast(String Message, AppMsg.Style Style) {
+        AppMsg mAppMsg = AppMsg.makeText((android.app.Activity)mContext, Message, Style);
+        mAppMsg.setDuration(AppMsg.LENGTH_SHORT);
+        mAppMsg.setLayoutGravity(Gravity.BOTTOM);
+        mAppMsg.show();
     }
 
     public AlertDialog.Builder createAlertDialog(int Title, int Message, final Runnable runOnTrue) {
@@ -170,42 +179,17 @@ public class Notifyer {
         abuilder
                 .setTitle(R.string.warning)
                 .setMessage(R.string.noroot)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         System.exit(0);
                     }
                 })
-                .setCancelable(false)
+                .setCancelable(BuildConfig.DEBUG)
                 .show();
     }
 
     public void showExceptionToast(Exception e) {
-        showToast(e.toString() + ":  " + e.getMessage());
+        showToast(e.toString() + ":  " + e.getMessage(), AppMsg.STYLE_ALERT);
     }
-
-//	public void getInputFromUser(int Prompt) {
-//		final Dialog dialog = new Dialog(mContext);
-//		dialog.setTitle(Prompt);
-//		dialog.setContentView(R.layout.dialog_input);
-//		Button bOk = (Button) dialog.findViewById(R.id.bOk);
-//		final EditText etInput = (EditText) dialog.findViewById(R.id.etInput);
-//		bOk.setOnClickListener(new View.OnClickListener() {
-//
-//			@Override
-//			public void onClick(View v) {
-//				try {
-//					final String Input = etInput.getText().toString();
-//					dialog.dismiss();
-//				} catch (NullPointerException e) {
-//					showExceptionToast(e);
-//				}
-//			}
-//		});
-//		dialog.show();
-//	}
-//
-//	public String getInputFromUser(String Prompt) {
-//		return null;
-//	}
 }

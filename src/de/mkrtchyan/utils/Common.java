@@ -21,51 +21,55 @@ package de.mkrtchyan.utils;
  * SOFTWARE.
  */
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
-import org.sufficientlysecure.rootcommands.Shell;
-import org.sufficientlysecure.rootcommands.Toolbox;
-import org.sufficientlysecure.rootcommands.command.SimpleCommand;
-import org.sufficientlysecure.rootcommands.util.BrokenBusyboxException;
-import org.sufficientlysecure.rootcommands.util.RootAccessDeniedException;
+import org.rootcommands.Shell;
+import org.rootcommands.Toolbox;
+import org.rootcommands.command.SimpleCommand;
+import org.rootcommands.util.BrokenBusyboxException;
+import org.rootcommands.util.RootAccessDeniedException;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.concurrent.TimeoutException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 
 public class Common {
 
-    public void pushFileFromRAW(Context mContext, File outputFile, int RAW) {
+    public static final String TAG = "Common";
+	public static final String Logs = "commands.log";
+	public static final String PREF_NAME = "de_mkrtchyan_utils_common";
+	public static final String PREF_LOG = "log_commands";
+
+    public void pushFileFromRAW(Context mContext, File outputFile, int RAW) throws IOException {
         if (!outputFile.exists()) {
-            try {
-                InputStream is = mContext.getResources().openRawResource(RAW);
-                OutputStream os = new FileOutputStream(outputFile);
-                byte[] data = new byte[is.available()];
-                is.read(data);
-                os.write(data);
-                is.close();
-                os.close();
-            } catch (IOException e) {
-                new Notifyer(mContext).showExceptionToast(e);
-            }
+            InputStream is = mContext.getResources().openRawResource(RAW);
+            OutputStream os = new FileOutputStream(outputFile);
+            byte[] data = new byte[is.available()];
+            is.read(data);
+            os.write(data);
+            is.close();
+            os.close();
         }
     }
 
     public boolean suRecognition() {
         try {
             return new Toolbox(Shell.startRootShell()).isRootAccessGiven();
-        } catch (Exception e) {
-            return false;
-        }
+        } catch (RootAccessDeniedException e) {} catch (IOException e) {} catch (TimeoutException e) {}
+	    return false;
     }
 
     public void checkFolder(File Folder) {
@@ -75,43 +79,25 @@ public class Common {
         }
     }
 
-    public void chmod(File file, String mod) {
+    public boolean chmod(File file, String mod) {
 
         try {
             new Toolbox(Shell.startRootShell()).setFilePermissions(file.getAbsolutePath(), mod);
+            return true;
         } catch (NullPointerException e) {
+            Log.d(TAG, e.getMessage());
             e.printStackTrace();
         } catch (IOException e) {
+            Log.d(TAG, e.getMessage());
             e.printStackTrace();
         } catch (TimeoutException e) {
+            Log.d(TAG, e.getMessage());
             e.printStackTrace();
         }
+        return false;
     }
 
-    public void unzip(File ZipFile, File OutputFolder) throws IOException {
-
-        FileInputStream fin = new FileInputStream(ZipFile);
-        ZipInputStream zin = new ZipInputStream(fin);
-        ZipEntry ze;
-
-        while ((ze = zin.getNextEntry()) != null) {
-
-            if (ze.isDirectory()) {
-                checkFolder(new File(OutputFolder, ze.getName()));
-            } else {
-                File file = new File(OutputFolder.getAbsolutePath(), ze.getName());
-                FileOutputStream fout = new FileOutputStream(file);
-                for (int c = zin.read(); c != -1; c = zin.read()) {
-                    fout.write(c);
-                }
-                zin.closeEntry();
-                fout.close();
-            }
-        }
-        zin.close();
-    }
-
-    public void deleteFolder(File Folder, boolean AndFolder) {
+    public void deleteFolder(File Folder, boolean AndFolder) throws IOException{
         if (Folder.exists()
                 && Folder.isDirectory()) {
             File[] files = Folder.listFiles();
@@ -124,10 +110,12 @@ public class Common {
             }
             if (AndFolder)
                 Folder.delete();
+        } else {
+            throw new IOException(Folder.getName() + "not exists!");
         }
     }
 
-    public void mountDir(File Dir, String mode) throws RootAccessDeniedException {
+    public void mountDir(File Dir, String mode) throws Exception {
         try {
             new Toolbox(Shell.startRootShell()).remount(Dir.getAbsolutePath(), mode);
         } catch (IOException e) {
@@ -135,7 +123,7 @@ public class Common {
         }
     }
 
-    public void move(File Source, File Destination, boolean Mount) throws RootAccessDeniedException {
+    public void move(File Source, File Destination, boolean Mount) throws Exception {
         if (Mount)
             mountDir(Destination, "RW");
         File[] files = Source.listFiles();
@@ -151,12 +139,13 @@ public class Common {
             mountDir(Destination, "RO");
     }
 
-    public String executeShell(String Command) {
+    public String executeShell(String Command) throws Exception {
 
         try {
             SimpleCommand command = new SimpleCommand(Command);
             Shell.startShell().add(command).waitForFinish();
             String output = command.getOutput();
+	        Log.i(TAG, Command);
             return output;
         } catch (BrokenBusyboxException e) {
             e.printStackTrace();
@@ -165,19 +154,20 @@ public class Common {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
+	    throw new Exception("Error while executing " + Command);
     }
 
-    public String executeShell(Context mContext, String Command) {
+    public String executeShell(Context mContext, String Command) throws Exception {
         try {
             SimpleCommand command = new SimpleCommand(Command);
             Shell.startShell().add(command).waitForFinish();
             String output = command.getOutput();
-            if (getBooleanPerf(mContext, "mkrtchyan_utils_common", "log-commands")) {
+	        Log.i(TAG, Command);
+            if (getBooleanPerf(mContext, PREF_NAME, PREF_LOG)) {
 
                 String CommandLog = "\nCommand:\n" + Command + "\n\nOutput:\n" + output;
 
-                FileOutputStream fo = mContext.openFileOutput("su-logs.log", Context.MODE_APPEND);
+                FileOutputStream fo = mContext.openFileOutput(Logs, Context.MODE_APPEND);
                 fo.write(CommandLog.getBytes());
             }
             return output;
@@ -187,13 +177,11 @@ public class Common {
         } catch (TimeoutException e) {
             e.printStackTrace();
         }
-
-        return "";
+	    throw new Exception("Error while executing " + Command);
     }
 
-    public String executeSuShell(String Command) throws RootAccessDeniedException {
+    public String executeSuShell(String Command) throws Exception {
         try {
-            String TAG = "executeSuShell";
             SimpleCommand command = new SimpleCommand(Command);
             Shell.startRootShell().add(command).waitForFinish();
             String output = command.getOutput();
@@ -206,20 +194,19 @@ public class Common {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        return "";
+	    throw new Exception("Error while executing " + Command);
     }
 
-    public String executeSuShell(Context mContext, String Command) throws RootAccessDeniedException {
+    public String executeSuShell(Context mContext, String Command) throws Exception {
 
         try {
             SimpleCommand command = new SimpleCommand(Command);
             Shell.startRootShell().add(command).waitForFinish();
             String output = command.getOutput();
-            if (getBooleanPerf(mContext, "mkrtchyan_utils_common", "log-commands")) {
-
+	        Log.i(TAG, Command);
+            if (getBooleanPerf(mContext, PREF_NAME, PREF_LOG)) {
                 String CommandLog = "\nCommand:\n\nsu -c " + Command + "\n\nOutput:\n" + output;
-                File log = new File(mContext.getFilesDir(), "command-logs.log");
+                File log = new File(mContext.getFilesDir(), Logs);
                 if (!log.exists())
                     log.createNewFile();
                 FileOutputStream fo = mContext.openFileOutput(log.getName(), Context.MODE_APPEND);
@@ -233,7 +220,7 @@ public class Common {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        return "";
+	    throw new Exception("Error while executing " + Command);
     }
 
     public boolean getBooleanPerf(Context mContext, String PrefName, String key) {
@@ -264,5 +251,37 @@ public class Common {
 		SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
 		editor.putInt(key, value);
 		editor.commit();
+	}
+
+	public void showLogs(final Context mContext) {
+		final Notifyer mNotifyer = new Notifyer(mContext);
+		final Dialog LogDialog = mNotifyer.createDialog(R.string.logs_title, R.layout.dialog_command_logs, false, true);
+		final TextView tvLog = (TextView) LogDialog.findViewById(R.id.tvSuLogs);
+		final Button bClearLog = (Button) LogDialog.findViewById(R.id.bClearLog);
+		bClearLog.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View view) {
+				new File(mContext.getFilesDir(), Common.Logs).delete();
+				tvLog.setText("");
+			}
+		});
+		String sLog = "";
+
+		try {
+			String line;
+			BufferedReader br = new BufferedReader(new InputStreamReader(mContext.openFileInput(Common.Logs)));
+			while ((line = br.readLine()) != null) {
+				sLog = sLog + line + "\n";
+			}
+			br.close();
+			tvLog.setText(sLog);
+		} catch (FileNotFoundException e) {
+			LogDialog.dismiss();
+		} catch (IOException e) {
+			LogDialog.dismiss();
+		}
+
+		LogDialog.show();
 	}
 }
