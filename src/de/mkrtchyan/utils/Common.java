@@ -33,7 +33,6 @@ import org.rootcommands.Shell;
 import org.rootcommands.Toolbox;
 import org.rootcommands.command.SimpleCommand;
 import org.rootcommands.util.BrokenBusyboxException;
-import org.rootcommands.util.RootAccessDeniedException;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -68,7 +67,9 @@ public class Common {
     public boolean suRecognition() {
         try {
             return new Toolbox(Shell.startRootShell()).isRootAccessGiven();
-        } catch (RootAccessDeniedException e) {} catch (IOException e) {} catch (TimeoutException e) {}
+        } catch (Exception e) {
+	        e.printStackTrace();
+        }
 	    return false;
     }
 
@@ -101,11 +102,11 @@ public class Common {
         if (Folder.exists()
                 && Folder.isDirectory()) {
             File[] files = Folder.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                if (files[i].isDirectory()) {
-                    deleteFolder(files[i], AndFolder);
+            for (File i :files) {
+                if (i.isDirectory()) {
+                    deleteFolder(i, AndFolder);
                 } else {
-                    files[i].delete();
+                    i.delete();
                 }
             }
             if (AndFolder)
@@ -127,11 +128,11 @@ public class Common {
         if (Mount)
             mountDir(Destination, "RW");
         File[] files = Source.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isDirectory()
-                    && files[i].exists()) {
+        for (File i : files) {
+            if (i.isDirectory()
+                    && i.exists()) {
                 if (Mount)
-                    mountDir(new File(Destination.getAbsolutePath(), files[i].getName()), "RW");
+                    mountDir(new File(Destination.getAbsolutePath(), i.getName()), "RW");
             }
         }
         executeSuShell("busybox mv -f " + Source.getAbsolutePath() + " " + Destination.getAbsolutePath());

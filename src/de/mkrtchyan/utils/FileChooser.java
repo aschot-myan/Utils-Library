@@ -30,58 +30,49 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
-
-import com.devspark.appmsg.AppMsg;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class FileChooser extends Dialog {
 
-    private static File Start;
-    private static File currentPath;
+    private File StartFolder, currentPath;
     private boolean use = false;
+	private boolean showHidden = false;
     private File selectedFile;
-    final private TextView tvPath;
     final private ListView lvFiles;
+	private ArrayList<File> FileList = new ArrayList<File>();
     private Context mContext;
-    private String[] files;
-    private int select;
     private Runnable runAtChoose;
-    private Notifyer mNotifyer;
-    private String EXT;
+	private String EXT = "";
+	private LinearLayout layout;
+	private boolean checkEXT = false;
 
-    public FileChooser(final Context mContext, String StartPath, String EXT, Runnable runAtChoose) {
+    public FileChooser(final Context mContext, final File StartFolder, Runnable runAtChoose)  throws NullPointerException{
         super(mContext);
 
-        mNotifyer = new Notifyer(mContext);
-        Start = new File(StartPath);
-        currentPath = Start;
+        this.StartFolder = StartFolder;
+        currentPath = StartFolder;
         this.mContext = mContext;
-        this.EXT = EXT;
-        this.runAtChoose = runAtChoose;
-        setContentView(R.layout.dialog_file_chooser);
-        setTitle(R.string.file_chooser);
+	    this.runAtChoose = runAtChoose;
 
-        tvPath = (TextView) findViewById(R.id.tvPath);
-        lvFiles = (ListView) findViewById(R.id.lvFiles);
+	    layout = new LinearLayout(mContext);
+		layout.setOrientation(LinearLayout.VERTICAL);
+
+	    lvFiles = new ListView(mContext);
+		layout.addView(lvFiles);
+        setContentView(layout);
 
         lvFiles.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
                                     long arg3) {
-                select = arg2;
-                selectedFile = new File(currentPath, files[select]);
+                selectedFile = FileList.get(arg2);
                 if (selectedFile.isDirectory()) {
-                    if (selectedFile.list().length > 0) {
-                        currentPath = selectedFile;
-                        reload();
-                    } else {
-                        mNotifyer.showToast(currentPath.getAbsolutePath() + " is empty!", AppMsg.STYLE_INFO);
-                        currentPath = Start;
-                        reload();
-                    }
+                    currentPath = selectedFile;
+                    reload();
                 } else {
                     fileSelected();
                 }
@@ -90,66 +81,70 @@ public class FileChooser extends Dialog {
     }
 
     private void reload() {
-        try {
-            tvPath.setText(currentPath.getAbsolutePath());
-            files = currentPath.list();
-            if (files.length <= 0) {
-                mNotifyer.showToast(currentPath.getAbsolutePath() + " is empty!", AppMsg.STYLE_INFO);
-            }
-            lvFiles.setAdapter(new ArrayAdapter<String>(mContext, android.R.layout.simple_list_item_1, files));
-        } catch (NullPointerException e) {
-            mNotifyer.showExceptionToast(e);
-            this.dismiss();
-        }
+	    FileList.clear();
+		checkEXT = !EXT.equals("");
+
+	    if (!currentPath.equals(StartFolder)) {
+	        FileList.add(currentPath.getParentFile());
+	    }
+	    try {
+		    for (File i : currentPath.listFiles()) {
+			    if (showHidden || !i.getName().startsWith("."))
+			     if (checkEXT) {
+			         if (!EXT.equals("") && i.getName().endsWith(EXT) || i.isDirectory()) {
+			             FileList.add(i);
+			         }
+			        } else {
+			      FileList.add(i);
+			     }
+	        }
+	    } catch (NullPointerException e) {
+		    this.dismiss();
+		    throw e;
+	    }
+	    Collections.sort(FileList);
+	    String[] tmp = new String[FileList.toArray(new File[FileList.size()]).length];
+	    for (int i = 0 ; i < tmp.length; i++) {
+		    tmp[i] = FileList.get(i).getName();
+	    }
+        lvFiles.setAdapter(new ArrayAdapter<String>(mContext, android.R.layout.simple_list_item_1, tmp));
     }
 
     private void fileSelected() {
 
-        if (selectedFile.getName().endsWith(EXT)) {
-            AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
-            mAlertDialog
-                    .setTitle(R.string.warning)
-                    .setMessage(String.format(mContext.getString(R.string.choose_message), selectedFile.getName()))
-                    .setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
-
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            use = true;
-                            runAtChoose.run();
-                            use = false;
-                            dismiss();
-                        }
-                    })
-                    .setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
-
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            use = false;
-                            currentPath = Start;
-                            reload();
-                        }
-                    })
-                    .setOnCancelListener(new DialogInterface.OnCancelListener() {
-
-                        @Override
-                        public void onCancel(DialogInterface dialog) {
-                            use = false;
-                        }
-                    })
-                    .show();
-        } else if (!EXT.equals("")) {
-                selectedFile = null;
-                mNotifyer.createDialog(R.string.warning, String.format(mContext.getString(R.string.wrong_format), EXT), true).show();
-        }
+           AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
+           mAlertDialog
+                   .setTitle(R.string.warning)
+                   .setMessage(String.format(mContext.getString(R.string.choose_message), selectedFile.getName()))
+                   .setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
+	                   @Override
+	                   public void onClick(DialogInterface dialog, int which) {
+		                   use = true;
+		                   runAtChoose.run();
+		                   use = false;
+		                   dismiss();
+	                   }
+                   })
+                   .setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
+	                   @Override
+	                   public void onClick(DialogInterface dialog, int which) {
+		                   use = false;
+		                   currentPath = StartFolder;
+		                   reload();
+	                   }
+                   })
+                   .setOnCancelListener(new DialogInterface.OnCancelListener() {
+	                   @Override
+	                   public void onCancel(DialogInterface dialog) {
+		                   use = false;
+	                   }
+                   })
+                   .show();
     }
 
     public void show() {
         super.show();
         reload();
-    }
-
-    public LinearLayout getLayout() {
-        return (LinearLayout) findViewById(R.layout.dialog_file_chooser);
     }
 
     public boolean isChoosed() {
@@ -158,4 +153,21 @@ public class FileChooser extends Dialog {
     public File getSelectedFile() {
         return selectedFile;
     }
+
+	public void setEXT(String EXT) {
+		if (!EXT.startsWith(".")) {
+			EXT = "." + EXT;
+		}
+		this.EXT = EXT;
+		reload();
+	}
+
+	public void showHiddenFiles(boolean showHidden) {
+		this.showHidden = showHidden;
+		reload();
+	}
+
+	public LinearLayout getLayout() {
+		return layout;
+	}
 }
