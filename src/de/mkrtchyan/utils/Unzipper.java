@@ -21,7 +21,6 @@ package de.mkrtchyan.utils;
  * SOFTWARE.
  */
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -38,13 +37,12 @@ import java.util.zip.ZipFile;
 public class Unzipper extends Observable {
 
 	private static final String TAG = "Unzipper";
-	private Common mCommon = new Common();
 	private File ZipFile, OutputFolder;
 
-	public Unzipper (Context mContext, File ZipFile, File OutputFolder) {
+	public Unzipper (File ZipFile, File OutputFolder) {
 		this.ZipFile = ZipFile;
 		this.OutputFolder = OutputFolder;
-		mCommon.checkFolder(OutputFolder);
+		Common.checkFolder(OutputFolder);
 	}
 
 	public void unzip () {
@@ -85,13 +83,13 @@ public class Unzipper extends Observable {
 		                        String outputDir) throws IOException {
 
 			if (entry.isDirectory()) {
-				mCommon.checkFolder(new File(outputDir, entry.getName()));
+				Common.checkFolder(new File(outputDir, entry.getName()));
 				return;
 			}
 
 			File outputFile = new File(outputDir, entry.getName());
 			if (!outputFile.getParentFile().exists()) {
-				mCommon.checkFolder(outputFile.getParentFile());
+				Common.checkFolder(outputFile.getParentFile());
 			}
 
 			Log.v(TAG, "Extracting: " + entry);

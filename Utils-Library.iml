@@ -24,8 +24,8 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="AppMsg" />
     <orderEntry type="library" name="android-support-v13" level="project" />
+    <orderEntry type="library" name="root-commands-1.2" level="project" />
   </component>
 </module>
 

@@ -32,7 +32,6 @@ import android.widget.TextView;
 import org.rootcommands.Shell;
 import org.rootcommands.Toolbox;
 import org.rootcommands.command.SimpleCommand;
-import org.rootcommands.util.BrokenBusyboxException;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,7 +41,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.concurrent.TimeoutException;
 
 
 public class Common {
@@ -52,7 +50,7 @@ public class Common {
 	public static final String PREF_NAME = "de_mkrtchyan_utils_common";
 	public static final String PREF_LOG = "log_commands";
 
-    public void pushFileFromRAW(Context mContext, File outputFile, int RAW) throws IOException {
+    public static void pushFileFromRAW(Context mContext, File outputFile, int RAW) throws IOException {
         if (!outputFile.exists()) {
             InputStream is = mContext.getResources().openRawResource(RAW);
             OutputStream os = new FileOutputStream(outputFile);
@@ -64,45 +62,30 @@ public class Common {
         }
     }
 
-    public boolean suRecognition() {
+    public static boolean suRecognition() {
         try {
             return new Toolbox(Shell.startRootShell()).isRootAccessGiven();
         } catch (Exception e) {
-	        e.printStackTrace();
+            return false;
         }
-	    return false;
     }
 
-    public void checkFolder(File Folder) {
+    public static void checkFolder(File Folder) {
         if (!Folder.exists()
                 || !Folder.isDirectory()) {
             Folder.mkdir();
         }
     }
 
-    public boolean chmod(File file, String mod) {
-
-        try {
-            new Toolbox(Shell.startRootShell()).setFilePermissions(file.getAbsolutePath(), mod);
-            return true;
-        } catch (NullPointerException e) {
-            Log.d(TAG, e.getMessage());
-            e.printStackTrace();
-        } catch (IOException e) {
-            Log.d(TAG, e.getMessage());
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            Log.d(TAG, e.getMessage());
-            e.printStackTrace();
-        }
-        return false;
+    public static boolean chmod(File file, String mod) throws Exception {
+        return new Toolbox(Shell.startRootShell()).setFilePermissions(file.getAbsolutePath(), mod);
     }
 
-    public void deleteFolder(File Folder, boolean AndFolder) throws IOException{
+    public static void deleteFolder(File Folder, boolean AndFolder) {
         if (Folder.exists()
                 && Folder.isDirectory()) {
             File[] files = Folder.listFiles();
-            for (File i :files) {
+            for (File i : files) {
                 if (i.isDirectory()) {
                     deleteFolder(i, AndFolder);
                 } else {
@@ -111,26 +94,19 @@ public class Common {
             }
             if (AndFolder)
                 Folder.delete();
-        } else {
-            throw new IOException(Folder.getName() + "not exists!");
         }
     }
 
-    public void mountDir(File Dir, String mode) throws Exception {
-        try {
-            new Toolbox(Shell.startRootShell()).remount(Dir.getAbsolutePath(), mode);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static boolean mountDir(File Dir, String mode) throws Exception {
+	    return new Toolbox(Shell.startRootShell()).remount(Dir.getAbsolutePath(), mode);
     }
 
-    public void move(File Source, File Destination, boolean Mount) throws Exception {
+    public static void move(File Source, File Destination, boolean Mount) throws Exception {
         if (Mount)
             mountDir(Destination, "RW");
         File[] files = Source.listFiles();
         for (File i : files) {
-            if (i.isDirectory()
-                    && i.exists()) {
+            if (i.isDirectory() && i.exists()) {
                 if (Mount)
                     mountDir(new File(Destination.getAbsolutePath(), i.getName()), "RW");
             }
@@ -140,7 +116,7 @@ public class Common {
             mountDir(Destination, "RO");
     }
 
-    public String executeShell(String Command) throws Exception {
+    public static String executeShell(String Command) throws ShellException {
 
         try {
             SimpleCommand command = new SimpleCommand(Command);
@@ -148,65 +124,49 @@ public class Common {
             String output = command.getOutput();
 	        Log.i(TAG, Command);
             return output;
-        } catch (BrokenBusyboxException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new ShellException("Error while executing " + Command + " " + e.getMessage());
         }
-	    throw new Exception("Error while executing " + Command);
     }
 
-    public String executeShell(Context mContext, String Command) throws Exception {
+    public static String executeShell(Context mContext, String Command) throws ShellException {
         try {
             SimpleCommand command = new SimpleCommand(Command);
             Shell.startShell().add(command).waitForFinish();
             String output = command.getOutput();
 	        Log.i(TAG, Command);
-            if (getBooleanPerf(mContext, PREF_NAME, PREF_LOG)) {
-
+            if (getBooleanPref(mContext, PREF_NAME, PREF_LOG)) {
                 String CommandLog = "\nCommand:\n" + Command + "\n\nOutput:\n" + output;
-
                 FileOutputStream fo = mContext.openFileOutput(Logs, Context.MODE_APPEND);
                 fo.write(CommandLog.getBytes());
             }
             return output;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new ShellException("Error while executing " + Command + " " + e.getMessage());
         }
-	    throw new Exception("Error while executing " + Command);
     }
 
-    public String executeSuShell(String Command) throws Exception {
+    public static String executeSuShell(String Command) throws ShellException {
         try {
             SimpleCommand command = new SimpleCommand(Command);
             Shell.startRootShell().add(command).waitForFinish();
             String output = command.getOutput();
             Log.i(TAG, Command);
             return output;
-        } catch (BrokenBusyboxException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new ShellException("Error while executing " + Command + " " + e.getMessage());
         }
-	    throw new Exception("Error while executing " + Command);
     }
 
-    public String executeSuShell(Context mContext, String Command) throws Exception {
+    public static String executeSuShell(Context mContext, String Command) throws ShellException {
 
         try {
             SimpleCommand command = new SimpleCommand(Command);
             Shell.startRootShell().add(command).waitForFinish();
             String output = command.getOutput();
 	        Log.i(TAG, Command);
-            if (getBooleanPerf(mContext, PREF_NAME, PREF_LOG)) {
-                String CommandLog = "\nCommand:\n\nsu -c " + Command + "\n\nOutput:\n" + output;
+            if (getBooleanPref(mContext, PREF_NAME, PREF_LOG)) {
+                String CommandLog = "\nSu-Command:\n\n"+ Command + "\n\nOutput:\n" + output;
                 File log = new File(mContext.getFilesDir(), Logs);
                 if (!log.exists())
                     log.createNewFile();
@@ -214,47 +174,46 @@ public class Common {
                 fo.write(CommandLog.getBytes());
             }
             return output;
-        } catch (BrokenBusyboxException ex) {
-            ex.printStackTrace();
-        } catch (TimeoutException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (Exception e) {
+            throw new ShellException("Error while executing " + Command + " " + e.getMessage());
         }
-	    throw new Exception("Error while executing " + Command);
     }
 
-    public boolean getBooleanPerf(Context mContext, String PrefName, String key) {
-        return mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).getBoolean(key, false);
+    public static boolean getBooleanPref(Context mContext, String PREF_NAME, String PREF_KEY) {
+        return mContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).getBoolean(PREF_KEY, false);
     }
 
-    public void setBooleanPerf(Context mContext, String PrefName, String key, Boolean value) {
-        SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
-        editor.putBoolean(key, value);
+    public static void setBooleanPref(Context mContext, String PREF_NAME, String PREF_KEY, Boolean value) {
+        SharedPreferences.Editor editor = mContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit();
+        editor.putBoolean(PREF_KEY, value);
         editor.commit();
     }
 
-    public String getStringPerf(Context mContext, String PrefName, String key) {
+    public static void toggleBooleanPref(Context mContext, String PREF_NAME, String PREF_KEY) {
+        setBooleanPref(mContext, PREF_NAME, PREF_KEY, !Common.getBooleanPref(mContext, PREF_NAME, PREF_KEY));
+    }
+
+    public static String getStringPref(Context mContext, String PrefName, String key) {
         return mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).getString(key, "");
     }
 
-    public void setStringPerf(Context mContext, String PrefName, String key, String value) {
+    public static void setStringPref(Context mContext, String PrefName, String key, String value) {
         SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
         editor.putString(key, value);
         editor.commit();
     }
 
-	public Integer getIntegerPerf(Context mContext, String PrefName, String key) {
+	public static Integer getIntegerPref(Context mContext, String PrefName, String key) {
 		return mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).getInt(key, 0);
 	}
 
-	public void setIntegerPerf(Context mContext, String PrefName, String key, int value) {
+	public static void setIntegerPref(Context mContext, String PrefName, String key, int value) {
 		SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
 		editor.putInt(key, value);
 		editor.commit();
 	}
 
-	public void showLogs(final Context mContext) {
+	public static void showLogs(final Context mContext) {
 		final Notifyer mNotifyer = new Notifyer(mContext);
 		final Dialog LogDialog = mNotifyer.createDialog(R.string.logs_title, R.layout.dialog_command_logs, false, true);
 		final TextView tvLog = (TextView) LogDialog.findViewById(R.id.tvSuLogs);
@@ -279,10 +238,17 @@ public class Common {
 			tvLog.setText(sLog);
 		} catch (FileNotFoundException e) {
 			LogDialog.dismiss();
+            Notifyer.showExceptionToast(mContext, TAG, e);
 		} catch (IOException e) {
 			LogDialog.dismiss();
+            Notifyer.showExceptionToast(mContext, TAG, e);
 		}
-
 		LogDialog.show();
 	}
+
+    public static class ShellException extends Exception {
+        public ShellException(String detailedMessage) {
+            super(detailedMessage);
+        }
+    }
 }

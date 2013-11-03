@@ -1,4 +1,7 @@
 <resources>
+
+    <string name="info">Information</string>
+    <string name="download_now">Download %s now?</string>
     <string name="corrupt_download">Downloaded file is corrupted.</string>
     <string name="try_again">Try again!</string>
     <string name="later">Later</string>
@@ -23,15 +26,11 @@
     <string name="empty_dir">Directory empty: %s</string>
     <string name="choose_message">Choosing %s. Are you sure?</string>
 
-    <string name="noroot">"Device not Rooted. Please Root it. More information under
-        xda-developer.com"
-    </string>
+    <string name="noroot">Device not Rooted. Please Root it. More information under xda-developers.com</string>
 
-    <string name="rate_title">Rate %s</string>
-    <string name="rate_message">If you enjoy using %s, would you mind taking a moment to rate it?
-        Thanks for your support!
-    </string>
-    <string name="rate">Yes, Rate %s</string>
-    <string name="rate_later">Remind me later</string>
-    <string name="rate_cancel">No, Thanks</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="rate_title">Rate my App!</string>
+    <string name="rate_message">Would you like to rate this app in the Play Store and support my work?</string>
+    <string name="never_ask">Never ask again</string>
 </resources>

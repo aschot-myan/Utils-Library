@@ -14,7 +14,7 @@ package de.mkrtchyan.utils;
  * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -25,22 +25,19 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.view.Gravity;
+import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
-import com.devspark.appmsg.AppMsg;
+import android.widget.Toast;
 
 public class Notifyer {
 
-    private Context mContext;
+    private final Context mContext;
 
-    public static final Runnable rEmpty = new Runnable() {
-        @Override
-        public void run() {
-
-        }
-    };
+    private static final String PREF_NAME = "notifyer";
+    private static final String PREF_KEY_DONT_SHOW_RATER = "show_rater";
 
     public Notifyer(Context mContext) {
         this.mContext = mContext;
@@ -76,20 +73,6 @@ public class Notifyer {
         return dialog;
     }
 
-    public void showToast(int Message, AppMsg.Style Style) {
-        AppMsg mAppMsg = AppMsg.makeText((android.app.Activity)mContext, Message, Style);
-        mAppMsg.setDuration(AppMsg.LENGTH_SHORT);
-        mAppMsg.setLayoutGravity(Gravity.BOTTOM);
-        mAppMsg.show();
-    }
-
-    public void showToast(String Message, AppMsg.Style Style) {
-        AppMsg mAppMsg = AppMsg.makeText((android.app.Activity)mContext, Message, Style);
-        mAppMsg.setDuration(AppMsg.LENGTH_SHORT);
-        mAppMsg.setLayoutGravity(Gravity.BOTTOM);
-        mAppMsg.show();
-    }
-
     public AlertDialog.Builder createAlertDialog(int Title, int Message, final Runnable runOnTrue) {
         AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
         mAlertDialog
@@ -99,12 +82,10 @@ public class Notifyer {
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
                         runOnTrue.run();
                     }
                 })
                 .setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
-
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                     }
@@ -121,12 +102,10 @@ public class Notifyer {
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
                         runOnTrue.run();
                     }
                 })
                 .setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
-
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                     }
@@ -139,18 +118,15 @@ public class Notifyer {
         mAlertDialog
                 .setTitle(Title)
                 .setMessage(Message);
-
         if (runOnTrue != null) {
             mAlertDialog.setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
 
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-
                     runOnTrue.run();
                 }
             });
         }
-
         if (runOnNegative != null) {
             mAlertDialog.setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
 
@@ -160,7 +136,6 @@ public class Notifyer {
                 }
             });
         }
-
         if (runOnNeutral != null) {
             mAlertDialog.setNeutralButton(R.string.neutral, new DialogInterface.OnClickListener() {
 
@@ -170,13 +145,11 @@ public class Notifyer {
                 }
             });
         }
-
         return mAlertDialog;
     }
 
     public void showRootDeniedDialog() {
-        AlertDialog.Builder abuilder = new AlertDialog.Builder(mContext);
-        abuilder
+        new AlertDialog.Builder(mContext)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.noroot)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -189,7 +162,35 @@ public class Notifyer {
                 .show();
     }
 
-    public void showExceptionToast(Exception e) {
-        showToast(e.toString() + ":  " + e.getMessage(), AppMsg.STYLE_ALERT);
+    public static void showExceptionToast(Context mContext, String TAG, Exception e) {
+        Toast.makeText(mContext, e.toString() + ":  " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        e.printStackTrace();
+        Log.e(TAG, e.getMessage());
+    }
+
+    public static void showAppRateDialog(final Context mContext) {
+        if (!Common.getBooleanPref(mContext, PREF_NAME, PREF_KEY_DONT_SHOW_RATER))
+            new AlertDialog.Builder(mContext)
+                    .setTitle(R.string.rate_title)
+                    .setMessage(R.string.rate_message)
+                    .setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_DONT_SHOW_RATER, true);
+                            mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + mContext.getPackageName())));
+                        }
+                    })
+                    .setNeutralButton(R.string.neutral, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                        }
+                    })
+                    .setNegativeButton(R.string.never_ask, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_DONT_SHOW_RATER, false);
+                        }
+                    })
+                    .show();
     }
 }

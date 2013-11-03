@@ -37,29 +37,29 @@ import java.util.Collections;
 
 public class FileChooser extends Dialog {
 
-    private File StartFolder, currentPath;
-    private boolean use = false;
+    private final File StartFolder;
+    private File currentPath;
 	private boolean showHidden = false;
     private File selectedFile;
     final private ListView lvFiles;
 	private ArrayList<File> FileList = new ArrayList<File>();
-    private Context mContext;
+    private final Context mContext;
     private Runnable runAtChoose;
 	private String EXT = "";
 	private LinearLayout layout;
-	private boolean checkEXT = false;
+    private boolean warn = true;
+    private boolean BrowseUpEnabled = false;
 
     public FileChooser(final Context mContext, final File StartFolder, Runnable runAtChoose)  throws NullPointerException{
         super(mContext);
 
         this.StartFolder = StartFolder;
-        currentPath = StartFolder;
         this.mContext = mContext;
+        currentPath = StartFolder;
 	    this.runAtChoose = runAtChoose;
 
 	    layout = new LinearLayout(mContext);
 		layout.setOrientation(LinearLayout.VERTICAL);
-
 	    lvFiles = new ListView(mContext);
 		layout.addView(lvFiles);
         setContentView(layout);
@@ -80,18 +80,17 @@ public class FileChooser extends Dialog {
         });
     }
 
-    private void reload() {
+    public void reload() {
 	    FileList.clear();
-		checkEXT = !EXT.equals("");
 
-	    if (!currentPath.equals(StartFolder)) {
+	    if (!currentPath.equals(StartFolder) || BrowseUpEnabled) {
 	        FileList.add(currentPath.getParentFile());
 	    }
 	    try {
 		    for (File i : currentPath.listFiles()) {
 			    if (showHidden || !i.getName().startsWith("."))
-			     if (checkEXT) {
-			         if (!EXT.equals("") && i.getName().endsWith(EXT) || i.isDirectory()) {
+			     if (!EXT.equals("") ) {
+			         if (i.getName().endsWith(EXT) || i.isDirectory()) {
 			             FileList.add(i);
 			         }
 			        } else {
@@ -104,14 +103,23 @@ public class FileChooser extends Dialog {
 	    }
 	    Collections.sort(FileList);
 	    String[] tmp = new String[FileList.toArray(new File[FileList.size()]).length];
-	    for (int i = 0 ; i < tmp.length; i++) {
-		    tmp[i] = FileList.get(i).getName();
+	    for (int i = 0 ; i < tmp.length ; i++) {
+
+            if (i == 0 && BrowseUpEnabled || i == 0 && currentPath != StartFolder) {
+                tmp[0] = "/..";
+            } else {
+                if (FileList.get(i).isDirectory()) {
+                    tmp[i] = FileList.get(i).getName() + "/";
+                } else {
+                    tmp[i] = FileList.get(i).getName();
+                }
+            }
 	    }
         lvFiles.setAdapter(new ArrayAdapter<String>(mContext, android.R.layout.simple_list_item_1, tmp));
     }
 
     private void fileSelected() {
-
+        if (warn) {
            AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
            mAlertDialog
                    .setTitle(R.string.warning)
@@ -119,27 +127,20 @@ public class FileChooser extends Dialog {
                    .setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
 	                   @Override
 	                   public void onClick(DialogInterface dialog, int which) {
-		                   use = true;
 		                   runAtChoose.run();
-		                   use = false;
 		                   dismiss();
 	                   }
                    })
                    .setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
 	                   @Override
 	                   public void onClick(DialogInterface dialog, int which) {
-		                   use = false;
-		                   currentPath = StartFolder;
-		                   reload();
-	                   }
-                   })
-                   .setOnCancelListener(new DialogInterface.OnCancelListener() {
-	                   @Override
-	                   public void onCancel(DialogInterface dialog) {
-		                   use = false;
 	                   }
                    })
                    .show();
+        } else {
+            runAtChoose.run();
+            this.dismiss();
+        }
     }
 
     public void show() {
@@ -147,9 +148,6 @@ public class FileChooser extends Dialog {
         reload();
     }
 
-    public boolean isChoosed() {
-        return use;
-    }
     public File getSelectedFile() {
         return selectedFile;
     }
@@ -162,12 +160,17 @@ public class FileChooser extends Dialog {
 		reload();
 	}
 
-	public void showHiddenFiles(boolean showHidden) {
-		this.showHidden = showHidden;
-		reload();
-	}
-
 	public LinearLayout getLayout() {
 		return layout;
 	}
+    public void setWarn(boolean warn) {
+        this.warn = warn;
+    }
+    public void setBrowseUpEnabled(boolean BrowseUpEnabled) {
+        this.BrowseUpEnabled = BrowseUpEnabled;
+    }
+    public void showHiddenFiles(boolean showHidden) {
+        this.showHidden = showHidden;
+        reload();
+    }
 }
