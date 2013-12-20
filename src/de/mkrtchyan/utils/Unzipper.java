@@ -42,7 +42,7 @@ public class Unzipper extends Observable {
 	public Unzipper (File ZipFile, File OutputFolder) {
 		this.ZipFile = ZipFile;
 		this.OutputFolder = OutputFolder;
-		Common.checkFolder(OutputFolder);
+        OutputFolder.mkdir();
 	}
 
 	public void unzip () {
@@ -83,13 +83,13 @@ public class Unzipper extends Observable {
 		                        String outputDir) throws IOException {
 
 			if (entry.isDirectory()) {
-				Common.checkFolder(new File(outputDir, entry.getName()));
+                new File(outputDir, entry.getName()).mkdir();
 				return;
 			}
 
 			File outputFile = new File(outputDir, entry.getName());
 			if (!outputFile.getParentFile().exists()) {
-				Common.checkFolder(outputFile.getParentFile());
+                outputFile.getParentFile().mkdir();
 			}
 
 			Log.v(TAG, "Extracting: " + entry);

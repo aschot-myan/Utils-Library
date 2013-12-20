@@ -163,9 +163,11 @@ public class Notifyer {
     }
 
     public static void showExceptionToast(Context mContext, String TAG, Exception e) {
-        Toast.makeText(mContext, e.toString() + ":  " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        e.printStackTrace();
-        Log.e(TAG, e.getMessage());
+        if (e.toString() != null && e.getMessage() != null ) {
+            Toast.makeText(mContext, e.toString() + ":  " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
+        }
     }
 
     public static void showAppRateDialog(final Context mContext) {
@@ -188,7 +190,7 @@ public class Notifyer {
                     .setNegativeButton(R.string.never_ask, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_DONT_SHOW_RATER, false);
+                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_DONT_SHOW_RATER, true);
                         }
                     })
                     .show();

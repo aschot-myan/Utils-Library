@@ -23,6 +23,8 @@ package de.mkrtchyan.utils;
 
 import android.util.Log;
 
+import org.sufficientlysecure.rootcommands.Shell;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -87,17 +89,9 @@ public class SHA1 {
         }
     }
 
-    public static String generateChecksumOverSuShell(File file) throws SHA1SuShellException {
+    public static String generateChecksumOverShell(Shell mShell, File file) throws SHA1ShellException {
         try {
-            return Common.executeSuShell("sha1sum " + file.getAbsolutePath());
-        } catch (Exception e) {
-            throw new SHA1SuShellException(e.getMessage());
-        }
-    }
-
-    public static String generateChecksumOverShell(File file) throws SHA1ShellException {
-        try {
-            return Common.executeSuShell("sha1sum " + file.getAbsolutePath());
+            return mShell.execCommand("sha1sum " + file.getAbsolutePath());
         } catch (Exception e) {
             throw new SHA1ShellException(e.getMessage());
         }
@@ -106,12 +100,6 @@ public class SHA1 {
     public static class SHA1SumNotFound extends Exception {
 
         public SHA1SumNotFound(String detailMessage) {
-            super(detailMessage);
-        }
-    }
-
-    public static class SHA1SuShellException extends Exception {
-        public SHA1SuShellException(String detailMessage) {
             super(detailMessage);
         }
     }

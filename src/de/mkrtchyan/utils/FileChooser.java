@@ -173,4 +173,8 @@ public class FileChooser extends Dialog {
         this.showHidden = showHidden;
         reload();
     }
+
+    public ListView getList() {
+        return lvFiles;
+    }
 }

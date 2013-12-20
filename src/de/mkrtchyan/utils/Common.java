@@ -24,34 +24,35 @@ package de.mkrtchyan.utils;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.rootcommands.Shell;
-import org.rootcommands.Toolbox;
-import org.rootcommands.command.SimpleCommand;
+import org.sufficientlysecure.rootcommands.Shell;
+import org.sufficientlysecure.rootcommands.Toolbox;
+import org.sufficientlysecure.rootcommands.util.FailedExecuteCommand;
+import org.sufficientlysecure.rootcommands.util.RootAccessDeniedException;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 
 
 public class Common {
 
-    public static final String TAG = "Common";
-	public static final String Logs = "commands.log";
 	public static final String PREF_NAME = "de_mkrtchyan_utils_common";
-	public static final String PREF_LOG = "log_commands";
 
-    public static void pushFileFromRAW(Context mContext, File outputFile, int RAW) throws IOException {
-        if (!outputFile.exists()) {
+    public static void pushFileFromRAW(Context mContext, File outputFile, int RAW, boolean Override) throws IOException {
+        if (!outputFile.exists() || Override) {
+            if (Override)
+                outputFile.delete();
             InputStream is = mContext.getResources().openRawResource(RAW);
             OutputStream os = new FileOutputStream(outputFile);
             byte[] data = new byte[is.available()];
@@ -70,15 +71,8 @@ public class Common {
         }
     }
 
-    public static void checkFolder(File Folder) {
-        if (!Folder.exists()
-                || !Folder.isDirectory()) {
-            Folder.mkdir();
-        }
-    }
-
-    public static boolean chmod(File file, String mod) throws Exception {
-        return new Toolbox(Shell.startRootShell()).setFilePermissions(file.getAbsolutePath(), mod);
+    public static void chmod(Shell mShell, File file, String mod) throws IOException, FailedExecuteCommand {
+        mShell.execCommand("toolbox chmod " + mod + " " + file.getAbsolutePath());
     }
 
     public static void deleteFolder(File Folder, boolean AndFolder) {
@@ -92,16 +86,24 @@ public class Common {
                     i.delete();
                 }
             }
-            if (AndFolder)
+            if (AndFolder) {
                 Folder.delete();
+            }
         }
     }
 
-    public static boolean mountDir(File Dir, String mode) throws Exception {
-	    return new Toolbox(Shell.startRootShell()).remount(Dir.getAbsolutePath(), mode);
+    public static boolean mountDir(File Dir, String mode) {
+        try {
+            return new Toolbox(Shell.startRootShell()).remount(Dir.getAbsolutePath(), mode);
+        } catch (RootAccessDeniedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
-    public static void move(File Source, File Destination, boolean Mount) throws Exception {
+    public static void move(Shell mShell, File Source, File Destination, boolean Mount) throws Exception {
         if (Mount)
             mountDir(Destination, "RW");
         File[] files = Source.listFiles();
@@ -111,72 +113,9 @@ public class Common {
                     mountDir(new File(Destination.getAbsolutePath(), i.getName()), "RW");
             }
         }
-        executeSuShell("busybox mv -f " + Source.getAbsolutePath() + " " + Destination.getAbsolutePath());
+        mShell.execCommand("busybox mv -f " + Source.getAbsolutePath() + " " + Destination.getAbsolutePath());
         if (Mount)
             mountDir(Destination, "RO");
-    }
-
-    public static String executeShell(String Command) throws ShellException {
-
-        try {
-            SimpleCommand command = new SimpleCommand(Command);
-            Shell.startShell().add(command).waitForFinish();
-            String output = command.getOutput();
-	        Log.i(TAG, Command);
-            return output;
-        } catch (Exception e) {
-            throw new ShellException("Error while executing " + Command + " " + e.getMessage());
-        }
-    }
-
-    public static String executeShell(Context mContext, String Command) throws ShellException {
-        try {
-            SimpleCommand command = new SimpleCommand(Command);
-            Shell.startShell().add(command).waitForFinish();
-            String output = command.getOutput();
-	        Log.i(TAG, Command);
-            if (getBooleanPref(mContext, PREF_NAME, PREF_LOG)) {
-                String CommandLog = "\nCommand:\n" + Command + "\n\nOutput:\n" + output;
-                FileOutputStream fo = mContext.openFileOutput(Logs, Context.MODE_APPEND);
-                fo.write(CommandLog.getBytes());
-            }
-            return output;
-        } catch (Exception e) {
-            throw new ShellException("Error while executing " + Command + " " + e.getMessage());
-        }
-    }
-
-    public static String executeSuShell(String Command) throws ShellException {
-        try {
-            SimpleCommand command = new SimpleCommand(Command);
-            Shell.startRootShell().add(command).waitForFinish();
-            String output = command.getOutput();
-            Log.i(TAG, Command);
-            return output;
-        } catch (Exception e) {
-            throw new ShellException("Error while executing " + Command + " " + e.getMessage());
-        }
-    }
-
-    public static String executeSuShell(Context mContext, String Command) throws ShellException {
-
-        try {
-            SimpleCommand command = new SimpleCommand(Command);
-            Shell.startRootShell().add(command).waitForFinish();
-            String output = command.getOutput();
-	        Log.i(TAG, Command);
-            if (getBooleanPref(mContext, PREF_NAME, PREF_LOG)) {
-                String CommandLog = "\nSu-Command:\n\n"+ Command + "\n\nOutput:\n" + output;
-                File log = new File(mContext.getFilesDir(), Logs);
-                if (!log.exists())
-                    log.createNewFile();
-                FileOutputStream fo = mContext.openFileOutput(log.getName(), Context.MODE_APPEND);
-                fo.write(CommandLog.getBytes());
-            }
-            return output;
-        } catch (Exception e) {
-            throw new ShellException("Error while executing " + Command + " " + e.getMessage());
-        }
     }
 
     public static boolean getBooleanPref(Context mContext, String PREF_NAME, String PREF_KEY) {
@@ -222,7 +161,7 @@ public class Common {
 
 			@Override
 			public void onClick(View view) {
-				new File(mContext.getFilesDir(), Common.Logs).delete();
+				new File(mContext.getFilesDir(), Shell.Logs).delete();
 				tvLog.setText("");
 			}
 		});
@@ -230,7 +169,7 @@ public class Common {
 
 		try {
 			String line;
-			BufferedReader br = new BufferedReader(new InputStreamReader(mContext.openFileInput(Common.Logs)));
+			BufferedReader br = new BufferedReader(new InputStreamReader(mContext.openFileInput(Shell.Logs)));
 			while ((line = br.readLine()) != null) {
 				sLog = sLog + line + "\n";
 			}
@@ -238,17 +177,22 @@ public class Common {
 			tvLog.setText(sLog);
 		} catch (FileNotFoundException e) {
 			LogDialog.dismiss();
-            Notifyer.showExceptionToast(mContext, TAG, e);
 		} catch (IOException e) {
 			LogDialog.dismiss();
-            Notifyer.showExceptionToast(mContext, TAG, e);
 		}
 		LogDialog.show();
 	}
 
-    public static class ShellException extends Exception {
-        public ShellException(String detailedMessage) {
-            super(detailedMessage);
+    public static void copyFile(File src, File dst) throws IOException {
+        FileChannel inChannel = new FileInputStream(src).getChannel();
+        FileChannel outChannel = new FileOutputStream(dst).getChannel();
+        try {
+            inChannel.transferTo(0, inChannel.size(), outChannel);
+        } finally {
+            if (inChannel != null)
+                inChannel.close();
+            if (outChannel != null)
+                outChannel.close();
         }
     }
 }
