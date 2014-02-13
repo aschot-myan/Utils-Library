@@ -35,7 +35,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class FileChooser extends Dialog {
+public class FileChooserDialog extends Dialog {
 
     private final File StartFolder;
     private File currentPath;
@@ -45,12 +45,12 @@ public class FileChooser extends Dialog {
 	private ArrayList<File> FileList = new ArrayList<File>();
     private final Context mContext;
     private Runnable runAtChoose;
-	private String EXT = "";
+    private String AllowedEXT[] = {""};
 	private LinearLayout layout;
     private boolean warn = true;
     private boolean BrowseUpEnabled = false;
 
-    public FileChooser(final Context mContext, final File StartFolder, Runnable runAtChoose)  throws NullPointerException{
+    public FileChooserDialog(final Context mContext, final File StartFolder, Runnable runAtChoose)  throws NullPointerException{
         super(mContext);
 
         this.StartFolder = StartFolder;
@@ -60,6 +60,7 @@ public class FileChooser extends Dialog {
 
 	    layout = new LinearLayout(mContext);
 		layout.setOrientation(LinearLayout.VERTICAL);
+
 	    lvFiles = new ListView(mContext);
 		layout.addView(lvFiles);
         setContentView(layout);
@@ -81,29 +82,42 @@ public class FileChooser extends Dialog {
     }
 
     public void reload() {
-	    FileList.clear();
+        FileList.clear();
 
-	    if (!currentPath.equals(StartFolder) || BrowseUpEnabled) {
-	        FileList.add(currentPath.getParentFile());
-	    }
-	    try {
-		    for (File i : currentPath.listFiles()) {
-			    if (showHidden || !i.getName().startsWith("."))
-			     if (!EXT.equals("") ) {
-			         if (i.getName().endsWith(EXT) || i.isDirectory()) {
-			             FileList.add(i);
-			         }
-			        } else {
-			      FileList.add(i);
-			     }
-	        }
-	    } catch (NullPointerException e) {
-		    this.dismiss();
-		    throw e;
-	    }
-	    Collections.sort(FileList);
-	    String[] tmp = new String[FileList.toArray(new File[FileList.size()]).length];
-	    for (int i = 0 ; i < tmp.length ; i++) {
+        if (!currentPath.equals(StartFolder) || BrowseUpEnabled) {
+            FileList.add(currentPath.getParentFile());
+        }
+        try {
+            for (File i : currentPath.listFiles()) {
+                if (showHidden || !i.getName().startsWith(".")) {
+                    if (!AllowedEXT[0].equals("") || AllowedEXT.length > 1 ) {
+                        if (i.isDirectory()) {
+                            FileList.add(i);
+                        } else {
+                            for (String EXT : AllowedEXT) {
+                                if (i.getName().endsWith(EXT)) {
+                                    FileList.add(i);
+                                }
+                            }
+                        }
+                    } else {
+                        FileList.add(i);
+                    }
+                }
+            }
+        } catch (NullPointerException e) {
+            this.dismiss();
+            throw e;
+        }
+
+        try {
+            Collections.sort(FileList);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+
+        String[] tmp = new String[FileList.toArray(new File[FileList.size()]).length];
+        for (int i = 0 ; i < tmp.length ; i++) {
 
             if (i == 0 && BrowseUpEnabled || i == 0 && currentPath != StartFolder) {
                 tmp[0] = "/..";
@@ -114,7 +128,7 @@ public class FileChooser extends Dialog {
                     tmp[i] = FileList.get(i).getName();
                 }
             }
-	    }
+        }
         lvFiles.setAdapter(new ArrayAdapter<String>(mContext, android.R.layout.simple_list_item_1, tmp));
     }
 
@@ -152,11 +166,13 @@ public class FileChooser extends Dialog {
         return selectedFile;
     }
 
-	public void setEXT(String EXT) {
-		if (!EXT.startsWith(".")) {
-			EXT = "." + EXT;
-		}
-		this.EXT = EXT;
+	public void setAllowedEXT(String AllowedEXT[]) {
+        for (int i = 0; i > AllowedEXT.length; i++) {
+            if (!AllowedEXT[i].startsWith(".")) {
+                AllowedEXT[i] = "." + AllowedEXT[i];
+            }
+        }
+		this.AllowedEXT = AllowedEXT;
 		reload();
 	}
 
@@ -171,7 +187,9 @@ public class FileChooser extends Dialog {
     }
     public void showHiddenFiles(boolean showHidden) {
         this.showHidden = showHidden;
-        reload();
+        if (isShowing()) {
+            reload();
+        }
     }
 
     public ListView getList() {
