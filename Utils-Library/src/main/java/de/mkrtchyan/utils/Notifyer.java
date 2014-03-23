@@ -37,7 +37,7 @@ public class Notifyer {
     private final Context mContext;
 
     private static final String PREF_NAME = "notifyer";
-    private static final String PREF_KEY_DONT_SHOW_RATER = "show_rater";
+    private static final String PREF_KEY_HIDE_RATER = "show_rater";
 
     public Notifyer(Context mContext) {
         this.mContext = mContext;
@@ -148,7 +148,7 @@ public class Notifyer {
         return mAlertDialog;
     }
 
-    public void showRootDeniedDialog() {
+    public static void showRootDeniedDialog(Context mContext) {
         new AlertDialog.Builder(mContext)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.noroot)
@@ -163,22 +163,25 @@ public class Notifyer {
     }
 
     public static void showExceptionToast(Context mContext, String TAG, Exception e) {
-        if (e.toString() != null && e.getMessage() != null ) {
-            Toast.makeText(mContext, e.toString() + ":  " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-            Log.e(TAG, e.getMessage());
+        if (e != null) {
+            if (e.getMessage() != null) {
+                Toast.makeText(mContext, e.toString() + ":  " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+                Log.e(TAG, e.getMessage());
+
+            }
         }
     }
 
     public static void showAppRateDialog(final Context mContext) {
-        if (!Common.getBooleanPref(mContext, PREF_NAME, PREF_KEY_DONT_SHOW_RATER))
+        if (!Common.getBooleanPref(mContext, PREF_NAME, PREF_KEY_HIDE_RATER))
             new AlertDialog.Builder(mContext)
                     .setTitle(R.string.rate_title)
                     .setMessage(R.string.rate_message)
                     .setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_DONT_SHOW_RATER, true);
+                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_HIDE_RATER, true);
                             mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + mContext.getPackageName())));
                         }
                     })
@@ -190,7 +193,7 @@ public class Notifyer {
                     .setNegativeButton(R.string.never_ask, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_DONT_SHOW_RATER, true);
+                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_HIDE_RATER, true);
                         }
                     })
                     .show();

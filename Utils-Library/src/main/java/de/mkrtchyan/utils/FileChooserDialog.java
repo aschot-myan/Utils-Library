@@ -41,7 +41,7 @@ public class FileChooserDialog extends Dialog {
     private File currentPath;
 	private boolean showHidden = false;
     private File selectedFile;
-    final private ListView lvFiles;
+    final private FileListView lvFiles;
 	private ArrayList<File> FileList = new ArrayList<File>();
     private final Context mContext;
     private Runnable runAtChoose;
@@ -61,7 +61,8 @@ public class FileChooserDialog extends Dialog {
 	    layout = new LinearLayout(mContext);
 		layout.setOrientation(LinearLayout.VERTICAL);
 
-	    lvFiles = new ListView(mContext);
+	    lvFiles = new FileListView(mContext);
+        lvFiles.setStartFolder(StartFolder);
 		layout.addView(lvFiles);
         setContentView(layout);
 
@@ -180,19 +181,19 @@ public class FileChooserDialog extends Dialog {
 		return layout;
 	}
     public void setWarn(boolean warn) {
-        this.warn = warn;
+        lvFiles.setWarnAtChoose(warn);
     }
     public void setBrowseUpEnabled(boolean BrowseUpEnabled) {
-        this.BrowseUpEnabled = BrowseUpEnabled;
+        lvFiles.setBrowseUpEnabled(BrowseUpEnabled);
     }
     public void showHiddenFiles(boolean showHidden) {
-        this.showHidden = showHidden;
+        lvFiles.showHidden(showHidden);
         if (isShowing()) {
             reload();
         }
     }
 
-    public ListView getList() {
+    public FileListView getList() {
         return lvFiles;
     }
 }
