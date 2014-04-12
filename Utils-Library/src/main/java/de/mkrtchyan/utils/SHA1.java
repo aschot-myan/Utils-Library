@@ -23,8 +23,6 @@ package de.mkrtchyan.utils;
 
 import android.util.Log;
 
-import org.sufficientlysecure.rootcommands.Shell;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,7 +37,8 @@ public class SHA1 {
 
     /**
      * Verifies file's SHA1 checksum
-     * @param file and name of a file that is to be verified
+     *
+     * @param file         and name of a file that is to be verified
      * @param ChecksumFile the file with generated checksum
      * @return true if the expeceted SHA1 checksum matches the file's SHA1 checksum; false otherwise.
      */
@@ -86,14 +85,6 @@ public class SHA1 {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             return "";
-        }
-    }
-
-    public static String generateChecksumOverShell(Shell mShell, File file) throws SHA1ShellException {
-        try {
-            return mShell.execCommand("sha1sum " + file.getAbsolutePath());
-        } catch (Exception e) {
-            throw new SHA1ShellException(e.getMessage());
         }
     }
 

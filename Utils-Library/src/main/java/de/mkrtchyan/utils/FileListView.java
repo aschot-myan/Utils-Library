@@ -36,39 +36,36 @@ import java.util.Collections;
 public class FileListView extends ListView {
 
     final private FileListView thisFileList = this;
-
+    private final Context mContext;
     private File currentPath;
     private ArrayList<File> FileList = new ArrayList<File>();
-    private final Context mContext;
 
     /** Settings */
-    /** Standard starts in android root  */
+    /**
+     * Standard starts in android root
+     */
     private File StartFolder = new File("/");
-    /** AllowedEXT contains all allowed file extensions (.mp3 or .img ), "" = All extensions */
+    /**
+     * AllowedEXT contains all allowed file extensions (.mp3 or .img ), "" = All extensions
+     */
     private String AllowedEXT[] = {""};
-    /** Show warning after file or folder picked */
+    /**
+     * Show warning after file or folder picked
+     */
     private boolean warnAtChoose = false;
-    /** Show hidden directories and files */
+    /**
+     * Show hidden directories and files
+     */
     private boolean showHidden = false;
     /**
      * Enables the option to navigate over the start folder.
      * EXAMPLE:
-     *
+     * <p/>
      * If /sdcard/ is the start folder you can navigate up to /
      */
     private boolean BrowseUpEnabled = false;
-
-    /** Handles file picking event */
-    public interface OnFileClickListener {
-        void OnFileClick (FileListView fileListView, File selectedFile);
-    }
-
-    public interface OnFolderClickListener {
-        void OnFolderClick(FileListView fileListView, File selectedFolder);
-    }
     private OnFileClickListener mFileClickListener = null;
     private OnFolderClickListener mFolderClickListener = null;
-
 
     public FileListView(Context mContext) {
         super(mContext);
@@ -117,7 +114,7 @@ public class FileListView extends ListView {
             }
             Collections.sort(FileList);
             String[] tmp = new String[FileList.toArray(new File[FileList.size()]).length];
-            for (int i = 0 ; i < tmp.length ; i++) {
+            for (int i = 0; i < tmp.length; i++) {
 
                 if (i == 0 && BrowseUpEnabled || i == 0 && currentPath != StartFolder) {
                     tmp[0] = "/..  " + currentPath.getParentFile().getName() + "/";
@@ -135,11 +132,11 @@ public class FileListView extends ListView {
 
             int i = 1;
             for (File file : FileList) {
-                    if (FileList.get(i).isDirectory()) {
-                        tmp[i] = file.getName() + "/";
-                    } else {
-                        tmp[i] = file.getName();
-                    }
+                if (FileList.get(i).isDirectory()) {
+                    tmp[i] = file.getName() + "/";
+                } else {
+                    tmp[i] = file.getName();
+                }
                 i++;
             }
             this.setAdapter(new ArrayAdapter<String>(mContext, android.R.layout.simple_list_item_1, tmp));
@@ -190,9 +187,11 @@ public class FileListView extends ListView {
     public void setWarnAtChoose(boolean warnAtChoose) {
         this.warnAtChoose = warnAtChoose;
     }
+
     public void setBrowseUpEnabled(boolean BrowseUpEnabled) {
         this.BrowseUpEnabled = BrowseUpEnabled;
     }
+
     public void showHidden(boolean showHidden) {
         this.showHidden = showHidden;
         reload();
@@ -208,6 +207,17 @@ public class FileListView extends ListView {
 
     public void setStartFolder(File StartFolder) {
         this.StartFolder = StartFolder;
+    }
+
+    /**
+     * Handles file picking event
+     */
+    public interface OnFileClickListener {
+        void OnFileClick(FileListView fileListView, File selectedFile);
+    }
+
+    public interface OnFolderClickListener {
+        void OnFolderClick(FileListView fileListView, File selectedFolder);
     }
 
 

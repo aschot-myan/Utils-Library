@@ -26,7 +26,7 @@
     <string name="empty_dir">Directory empty: %s</string>
     <string name="choose_message">Choosing %s. Are you sure?</string>
 
-    <string name="noroot">Device not Rooted. Please Root it. More information under xda-developers.com</string>
+    <string name="noroot">Device not Rooted. Please Root it. More information at xda-developers.com</string>
 
     <string name="cancel">Cancel</string>
 

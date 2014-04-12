@@ -28,11 +28,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.sufficientlysecure.rootcommands.Shell;
-import org.sufficientlysecure.rootcommands.Toolbox;
-import org.sufficientlysecure.rootcommands.util.FailedExecuteCommand;
-import org.sufficientlysecure.rootcommands.util.RootAccessDeniedException;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,7 +42,7 @@ import java.nio.channels.FileChannel;
 
 public class Common {
 
-	public static final String PREF_NAME = "de_mkrtchyan_utils_common";
+    public static final String PREF_NAME = "de_mkrtchyan_utils_common";
 
     public static void pushFileFromRAW(Context mContext, File outputFile, int RAW, boolean Override) throws IOException {
         if (!outputFile.exists() || Override) {
@@ -61,18 +56,6 @@ public class Common {
             is.close();
             os.close();
         }
-    }
-
-    public static boolean suRecognition() {
-        try {
-            return new Toolbox(Shell.startRootShell()).isRootAccessGiven();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public static void chmod(Shell mShell, File file, String mod) throws IOException, FailedExecuteCommand {
-        mShell.execCommand("toolbox chmod " + mod + " " + file.getAbsolutePath());
     }
 
     public static void deleteFolder(File Folder, boolean AndFolder) {
@@ -90,32 +73,6 @@ public class Common {
                 Folder.delete();
             }
         }
-    }
-
-    public static boolean mountDir(File Dir, String mode) {
-        try {
-            return new Toolbox(Shell.startRootShell()).remount(Dir.getAbsolutePath(), mode);
-        } catch (RootAccessDeniedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public static void move(Shell mShell, File Source, File Destination, boolean Mount) throws Exception {
-        if (Mount)
-            mountDir(Destination, "RW");
-        File[] files = Source.listFiles();
-        for (File i : files) {
-            if (i.isDirectory() && i.exists()) {
-                if (Mount)
-                    mountDir(new File(Destination.getAbsolutePath(), i.getName()), "RW");
-            }
-        }
-        mShell.execCommand("busybox mv -f " + Source.getAbsolutePath() + " " + Destination.getAbsolutePath());
-        if (Mount)
-            mountDir(Destination, "RO");
     }
 
     public static boolean getBooleanPref(Context mContext, String PREF_NAME, String PREF_KEY) {
@@ -142,46 +99,46 @@ public class Common {
         editor.commit();
     }
 
-	public static Integer getIntegerPref(Context mContext, String PrefName, String key) {
-		return mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).getInt(key, 0);
-	}
+    public static Integer getIntegerPref(Context mContext, String PrefName, String key) {
+        return mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).getInt(key, 0);
+    }
 
-	public static void setIntegerPref(Context mContext, String PrefName, String key, int value) {
-		SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
-		editor.putInt(key, value);
-		editor.commit();
-	}
+    public static void setIntegerPref(Context mContext, String PrefName, String key, int value) {
+        SharedPreferences.Editor editor = mContext.getSharedPreferences(PrefName, Context.MODE_PRIVATE).edit();
+        editor.putInt(key, value);
+        editor.commit();
+    }
 
-	public static void showLogs(final Context mContext) {
-		final Notifyer mNotifyer = new Notifyer(mContext);
-		final Dialog LogDialog = mNotifyer.createDialog(R.string.logs_title, R.layout.dialog_command_logs, false, true);
-		final TextView tvLog = (TextView) LogDialog.findViewById(R.id.tvSuLogs);
-		final Button bClearLog = (Button) LogDialog.findViewById(R.id.bClearLog);
-		bClearLog.setOnClickListener(new View.OnClickListener() {
+    public static void showLogs(final Context mContext) {
+        final Notifyer mNotifyer = new Notifyer(mContext);
+        final Dialog LogDialog = mNotifyer.createDialog(R.string.logs_title, R.layout.dialog_command_logs, false, true);
+        final TextView tvLog = (TextView) LogDialog.findViewById(R.id.tvSuLogs);
+        final Button bClearLog = (Button) LogDialog.findViewById(R.id.bClearLog);
+        bClearLog.setOnClickListener(new View.OnClickListener() {
 
-			@Override
-			public void onClick(View view) {
-				new File(mContext.getFilesDir(), Shell.Logs).delete();
-				tvLog.setText("");
-			}
-		});
-		String sLog = "";
+            @Override
+            public void onClick(View view) {
+                new File(mContext.getFilesDir(), "commands.txt").delete();
+                tvLog.setText("");
+            }
+        });
+        String sLog = "";
 
-		try {
-			String line;
-			BufferedReader br = new BufferedReader(new InputStreamReader(mContext.openFileInput(Shell.Logs)));
-			while ((line = br.readLine()) != null) {
-				sLog = sLog + line + "\n";
-			}
-			br.close();
-			tvLog.setText(sLog);
-		} catch (FileNotFoundException e) {
-			LogDialog.dismiss();
-		} catch (IOException e) {
-			LogDialog.dismiss();
-		}
-		LogDialog.show();
-	}
+        try {
+            String line;
+            BufferedReader br = new BufferedReader(new InputStreamReader(mContext.openFileInput("commands.txt")));
+            while ((line = br.readLine()) != null) {
+                sLog = sLog + line + "\n";
+            }
+            br.close();
+            tvLog.setText(sLog);
+        } catch (FileNotFoundException e) {
+            LogDialog.dismiss();
+        } catch (IOException e) {
+            LogDialog.dismiss();
+        }
+        LogDialog.show();
+    }
 
     public static void copyFile(File src, File dst) throws IOException {
         FileChannel inChannel = new FileInputStream(src).getChannel();

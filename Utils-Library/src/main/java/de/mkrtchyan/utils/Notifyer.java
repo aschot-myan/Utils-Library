@@ -34,20 +34,70 @@ import android.widget.Toast;
 
 public class Notifyer {
 
-    private final Context mContext;
-
     private static final String PREF_NAME = "notifyer";
     private static final String PREF_KEY_HIDE_RATER = "show_rater";
+    private final Context mContext;
 
     public Notifyer(Context mContext) {
         this.mContext = mContext;
     }
 
+    public static void showRootDeniedDialog(Context mContext) {
+        new AlertDialog.Builder(mContext)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.noroot)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        System.exit(0);
+                    }
+                })
+                .setCancelable(BuildConfig.DEBUG)
+                .show();
+    }
+
+    public static void showExceptionToast(Context mContext, String TAG, Exception e) {
+        if (e != null) {
+            if (e.getMessage() != null) {
+                Toast.makeText(mContext, e.toString() + ":  " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+                Log.e(TAG, e.getMessage());
+
+            }
+        }
+    }
+
+    public static void showAppRateDialog(final Context mContext) {
+        if (!Common.getBooleanPref(mContext, PREF_NAME, PREF_KEY_HIDE_RATER))
+            new AlertDialog.Builder(mContext)
+                    .setTitle(R.string.rate_title)
+                    .setMessage(R.string.rate_message)
+                    .setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_HIDE_RATER, true);
+                            mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + mContext.getPackageName())));
+                        }
+                    })
+                    .setNeutralButton(R.string.neutral, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                        }
+                    })
+                    .setNegativeButton(R.string.never_ask, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_HIDE_RATER, true);
+                        }
+                    })
+                    .show();
+    }
+
     public Dialog createDialog(int Title, String Message, boolean isCancelable) {
         TextView tv = new TextView(mContext);
         tv.setTextSize(20);
-	    ScrollView scrollView = new ScrollView(mContext);
-	    scrollView.addView(tv);
+        ScrollView scrollView = new ScrollView(mContext);
+        scrollView.addView(tv);
         tv.setText(Message);
         Dialog dialog = new Dialog(mContext);
         dialog.setTitle(Title);
@@ -60,9 +110,9 @@ public class Notifyer {
         Dialog dialog = new Dialog(mContext);
         dialog.setTitle(Title);
         if (isMessage) {
-	        ScrollView scrollView = new ScrollView(mContext);
+            ScrollView scrollView = new ScrollView(mContext);
             TextView tv = new TextView(mContext);
-	        scrollView.addView(tv);
+            scrollView.addView(tv);
             dialog.setContentView(scrollView);
             tv.setTextSize(20);
             tv.setText(Content);
@@ -146,56 +196,5 @@ public class Notifyer {
             });
         }
         return mAlertDialog;
-    }
-
-    public static void showRootDeniedDialog(Context mContext) {
-        new AlertDialog.Builder(mContext)
-                .setTitle(R.string.warning)
-                .setMessage(R.string.noroot)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        System.exit(0);
-                    }
-                })
-                .setCancelable(BuildConfig.DEBUG)
-                .show();
-    }
-
-    public static void showExceptionToast(Context mContext, String TAG, Exception e) {
-        if (e != null) {
-            if (e.getMessage() != null) {
-                Toast.makeText(mContext, e.toString() + ":  " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                e.printStackTrace();
-                Log.e(TAG, e.getMessage());
-
-            }
-        }
-    }
-
-    public static void showAppRateDialog(final Context mContext) {
-        if (!Common.getBooleanPref(mContext, PREF_NAME, PREF_KEY_HIDE_RATER))
-            new AlertDialog.Builder(mContext)
-                    .setTitle(R.string.rate_title)
-                    .setMessage(R.string.rate_message)
-                    .setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_HIDE_RATER, true);
-                            mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + mContext.getPackageName())));
-                        }
-                    })
-                    .setNeutralButton(R.string.neutral, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                        }
-                    })
-                    .setNegativeButton(R.string.never_ask, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            Common.setBooleanPref(mContext, PREF_NAME, PREF_KEY_HIDE_RATER, true);
-                        }
-                    })
-                    .show();
     }
 }

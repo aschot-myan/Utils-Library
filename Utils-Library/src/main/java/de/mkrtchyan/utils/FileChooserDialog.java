@@ -1,7 +1,7 @@
 package de.mkrtchyan.utils;
 
-/*
- * Copyright (c) 2013 Ashot Mkrtchyan
+/**
+ * Copyright (c) 2014 Ashot Mkrtchyan
  * Permission is hereby granted, free of charge, to any person obtaining a copy 
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights 
@@ -38,32 +38,31 @@ import java.util.Collections;
 public class FileChooserDialog extends Dialog {
 
     private final File StartFolder;
-    private File currentPath;
-	private boolean showHidden = false;
-    private File selectedFile;
-    final private FileListView lvFiles;
-	private ArrayList<File> FileList = new ArrayList<File>();
+    final private ListView lvFiles;
     private final Context mContext;
+    private File currentPath;
+    private boolean showHidden = false;
+    private File selectedFile;
+    private ArrayList<File> FileList = new ArrayList<File>();
     private Runnable runAtChoose;
     private String AllowedEXT[] = {""};
-	private LinearLayout layout;
+    private LinearLayout layout;
     private boolean warn = true;
     private boolean BrowseUpEnabled = false;
 
-    public FileChooserDialog(final Context mContext, final File StartFolder, Runnable runAtChoose)  throws NullPointerException{
+    public FileChooserDialog(final Context mContext, final File StartFolder, Runnable runAtChoose) throws NullPointerException {
         super(mContext);
 
         this.StartFolder = StartFolder;
         this.mContext = mContext;
         currentPath = StartFolder;
-	    this.runAtChoose = runAtChoose;
+        this.runAtChoose = runAtChoose;
 
-	    layout = new LinearLayout(mContext);
-		layout.setOrientation(LinearLayout.VERTICAL);
+        layout = new LinearLayout(mContext);
+        layout.setOrientation(LinearLayout.VERTICAL);
 
-	    lvFiles = new FileListView(mContext);
-        lvFiles.setStartFolder(StartFolder);
-		layout.addView(lvFiles);
+        lvFiles = new FileListView(mContext);
+        layout.addView(lvFiles);
         setContentView(layout);
 
         lvFiles.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -82,16 +81,17 @@ public class FileChooserDialog extends Dialog {
         });
     }
 
-    public void reload() {
+    private void reload() {
         FileList.clear();
 
-        if (!currentPath.equals(StartFolder) || BrowseUpEnabled) {
+        if ((!currentPath.equals(StartFolder) || BrowseUpEnabled)
+                && currentPath.getParentFile()!= null) {
             FileList.add(currentPath.getParentFile());
         }
         try {
             for (File i : currentPath.listFiles()) {
                 if (showHidden || !i.getName().startsWith(".")) {
-                    if (!AllowedEXT[0].equals("") || AllowedEXT.length > 1 ) {
+                    if (!AllowedEXT[0].equals("") || AllowedEXT.length > 1) {
                         if (i.isDirectory()) {
                             FileList.add(i);
                         } else {
@@ -107,8 +107,9 @@ public class FileChooserDialog extends Dialog {
                 }
             }
         } catch (NullPointerException e) {
-            this.dismiss();
-            throw e;
+            if (isShowing()) {
+                dismiss();
+            }
         }
 
         try {
@@ -118,10 +119,15 @@ public class FileChooserDialog extends Dialog {
         }
 
         String[] tmp = new String[FileList.toArray(new File[FileList.size()]).length];
-        for (int i = 0 ; i < tmp.length ; i++) {
+        for (int i = 0; i < tmp.length; i++) {
 
-            if (i == 0 && BrowseUpEnabled || i == 0 && currentPath != StartFolder) {
-                tmp[0] = "/..";
+            if (i == 0 && (BrowseUpEnabled || !currentPath.equals(StartFolder))
+                    && currentPath.getParentFile() != null) {
+                if (!currentPath.getParentFile().getAbsolutePath().equals("/")) {
+                    tmp[0] = currentPath.getParentFile().getAbsolutePath() + "/";
+                } else {
+                    tmp[0] = currentPath.getParentFile().getAbsolutePath();
+                }
             } else {
                 if (FileList.get(i).isDirectory()) {
                     tmp[i] = FileList.get(i).getName() + "/";
@@ -135,23 +141,23 @@ public class FileChooserDialog extends Dialog {
 
     private void fileSelected() {
         if (warn) {
-           AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
-           mAlertDialog
-                   .setTitle(R.string.warning)
-                   .setMessage(String.format(mContext.getString(R.string.choose_message), selectedFile.getName()))
-                   .setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
-	                   @Override
-	                   public void onClick(DialogInterface dialog, int which) {
-		                   runAtChoose.run();
-		                   dismiss();
-	                   }
-                   })
-                   .setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
-	                   @Override
-	                   public void onClick(DialogInterface dialog, int which) {
-	                   }
-                   })
-                   .show();
+            AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(mContext);
+            mAlertDialog
+                    .setTitle(R.string.warning)
+                    .setMessage(String.format(mContext.getString(R.string.choose_message), selectedFile.getName()))
+                    .setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            runAtChoose.run();
+                            dismiss();
+                        }
+                    })
+                    .setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    })
+                    .show();
         } else {
             runAtChoose.run();
             this.dismiss();
@@ -167,33 +173,41 @@ public class FileChooserDialog extends Dialog {
         return selectedFile;
     }
 
-	public void setAllowedEXT(String AllowedEXT[]) {
+    public void setAllowedEXT(String AllowedEXT[]) {
         for (int i = 0; i > AllowedEXT.length; i++) {
             if (!AllowedEXT[i].startsWith(".")) {
                 AllowedEXT[i] = "." + AllowedEXT[i];
             }
         }
-		this.AllowedEXT = AllowedEXT;
-		reload();
-	}
-
-	public LinearLayout getLayout() {
-		return layout;
-	}
-    public void setWarn(boolean warn) {
-        lvFiles.setWarnAtChoose(warn);
-    }
-    public void setBrowseUpEnabled(boolean BrowseUpEnabled) {
-        lvFiles.setBrowseUpEnabled(BrowseUpEnabled);
-    }
-    public void showHiddenFiles(boolean showHidden) {
-        lvFiles.showHidden(showHidden);
+        this.AllowedEXT = AllowedEXT;
         if (isShowing()) {
             reload();
         }
     }
 
-    public FileListView getList() {
+    public LinearLayout getLayout() {
+        return layout;
+    }
+
+    public void setWarn(boolean warn) {
+        this.warn = warn;
+    }
+
+    public void setBrowseUpEnabled(boolean BrowseUpEnabled) {
+        this.BrowseUpEnabled = BrowseUpEnabled;
+        if (isShowing()) {
+            reload();
+        }
+    }
+
+    public void showHiddenFiles(boolean showHidden) {
+        this.showHidden = showHidden;
+        if (isShowing()) {
+            reload();
+        }
+    }
+
+    public ListView getList() {
         return lvFiles;
     }
 }

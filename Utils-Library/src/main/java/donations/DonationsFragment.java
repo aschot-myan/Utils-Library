@@ -70,28 +70,61 @@ public class DonationsFragment extends Fragment {
     // http://developer.android.com/google/play/billing/billing_testing.html
     private static final String[] CATALOG_DEBUG = new String[]{"android.test.purchased",
             "android.test.canceled", "android.test.refunded", "android.test.item_unavailable"};
-
-    private Spinner mGoogleSpinner;
-    private TextView mFlattrUrlTextView;
-
-    // Google Play helper object
-    private IabHelper mHelper;
-
     protected boolean mDebug = false;
-
     protected boolean mGoogleEnabled = false;
     protected String mGooglePubkey = "";
     protected String[] mGgoogleCatalog = new String[]{};
     protected String[] mGoogleCatalogValues = new String[]{};
-
     protected boolean mPaypalEnabled = false;
     protected String mPaypalUser = "";
     protected String mPaypalCurrencyCode = "";
     protected String mPaypalItemName = "";
-
     protected boolean mFlattrEnabled = false;
     protected String mFlattrProjectUrl = "";
     protected String mFlattrUrl = "";
+    private Spinner mGoogleSpinner;
+    private TextView mFlattrUrlTextView;
+    // Google Play helper object
+    private IabHelper mHelper;
+    // Called when consumption is complete
+    IabHelper.OnConsumeFinishedListener mConsumeFinishedListener = new IabHelper.OnConsumeFinishedListener() {
+        public void onConsumeFinished(Purchase purchase, IabResult result) {
+            if (mDebug)
+                Log.d(TAG, "Consumption finished. Purchase: " + purchase + ", result: " + result);
+
+            // if we were disposed of in the meantime, quit.
+            if (mHelper == null) return;
+
+            if (result.isSuccess()) {
+                if (mDebug)
+                    Log.d(TAG, "Consumption successful. Provisioning.");
+            }
+            if (mDebug)
+                Log.d(TAG, "End consumption flow.");
+        }
+    };
+    // Callback for when a purchase is finished
+    IabHelper.OnIabPurchaseFinishedListener mPurchaseFinishedListener = new IabHelper.OnIabPurchaseFinishedListener() {
+        public void onIabPurchaseFinished(IabResult result, Purchase purchase) {
+            if (mDebug)
+                Log.d(TAG, "Purchase finished: " + result + ", purchase: " + purchase);
+
+            // if we were disposed of in the meantime, quit.
+            if (mHelper == null) return;
+
+            if (result.isSuccess()) {
+                if (mDebug)
+                    Log.d(TAG, "Purchase successful.");
+
+                // directly consume in-app purchase, so that people can donate multiple times
+                mHelper.consumeAsync(purchase, mConsumeFinishedListener);
+
+                // show thanks openDialog
+                openDialog(android.R.drawable.ic_dialog_info, R.string.donations__thanks_dialog_title,
+                        getString(R.string.donations__thanks_dialog));
+            }
+        }
+    };
 
     /**
      * Instantiate DonationsFragment.
@@ -279,7 +312,8 @@ public class DonationsFragment extends Fragment {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                     }
-                });
+                }
+        );
         dialog.show();
     }
 
@@ -305,47 +339,6 @@ public class DonationsFragment extends Fragment {
                     0, mPurchaseFinishedListener, null);
         }
     }
-
-    // Callback for when a purchase is finished
-    IabHelper.OnIabPurchaseFinishedListener mPurchaseFinishedListener = new IabHelper.OnIabPurchaseFinishedListener() {
-        public void onIabPurchaseFinished(IabResult result, Purchase purchase) {
-            if (mDebug)
-                Log.d(TAG, "Purchase finished: " + result + ", purchase: " + purchase);
-
-            // if we were disposed of in the meantime, quit.
-            if (mHelper == null) return;
-
-            if (result.isSuccess()) {
-                if (mDebug)
-                    Log.d(TAG, "Purchase successful.");
-
-                // directly consume in-app purchase, so that people can donate multiple times
-                mHelper.consumeAsync(purchase, mConsumeFinishedListener);
-
-                // show thanks openDialog
-                openDialog(android.R.drawable.ic_dialog_info, R.string.donations__thanks_dialog_title,
-                        getString(R.string.donations__thanks_dialog));
-            }
-        }
-    };
-
-    // Called when consumption is complete
-    IabHelper.OnConsumeFinishedListener mConsumeFinishedListener = new IabHelper.OnConsumeFinishedListener() {
-        public void onConsumeFinished(Purchase purchase, IabResult result) {
-            if (mDebug)
-                Log.d(TAG, "Consumption finished. Purchase: " + purchase + ", result: " + result);
-
-            // if we were disposed of in the meantime, quit.
-            if (mHelper == null) return;
-
-            if (result.isSuccess()) {
-                if (mDebug)
-                    Log.d(TAG, "Consumption successful. Provisioning.");
-            }
-            if (mDebug)
-                Log.d(TAG, "End consumption flow.");
-        }
-    };
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

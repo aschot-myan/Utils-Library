@@ -30,79 +30,66 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.Observable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class Unzipper extends Observable {
+public class Unzipper {
 
-	private static final String TAG = "Unzipper";
-	private File ZipFile, OutputFolder;
+    private static final String TAG = "Unzipper";
 
-	public Unzipper (File ZipFile, File OutputFolder) {
-		this.ZipFile = ZipFile;
-		this.OutputFolder = OutputFolder;
+    static public void unzip(final File zipFile, final File OutputFolder) {
         OutputFolder.mkdir();
-	}
+        Log.d(TAG, "unzipping " + zipFile.getName() + " to " + OutputFolder.getAbsolutePath());
+        new UnZipTask().execute(zipFile, OutputFolder);
+    }
 
-	public void unzip () {
-		Log.d(TAG, "unzipping " + ZipFile.getName() + " to " + OutputFolder.getAbsolutePath());
-		new UnZipTask().execute(ZipFile.getAbsolutePath(), OutputFolder.getAbsolutePath());
-	}
+    private static class UnZipTask extends AsyncTask<File, Void, Boolean> {
 
-	private class UnZipTask extends AsyncTask<String, Void, Boolean> {
+        @SuppressWarnings("rawtypes")
+        @Override
+        protected Boolean doInBackground(File... params) {
 
-		@SuppressWarnings("rawtypes")
-		@Override
-		protected Boolean doInBackground(String... params) {
-			String filePath = params[0];
-			String destinationPath = params[1];
+            File archive = params[0];
+            try {
+                File destination = params[1];
+                ZipFile zipfile = new ZipFile(archive);
+                for (Enumeration e = zipfile.entries(); e.hasMoreElements(); ) {
+                    ZipEntry entry = (ZipEntry) e.nextElement();
+                    unzipEntry(zipfile, entry, destination);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error while extracting file " + archive.getName(), e);
+                return false;
+            }
 
-			File archive = new File(filePath);
-			try {
-				ZipFile zipfile = new ZipFile(archive);
-				for (Enumeration e = zipfile.entries(); e.hasMoreElements();) {
-					ZipEntry entry = (ZipEntry) e.nextElement();
-					unzipEntry(zipfile, entry, destinationPath);
-				}
-			} catch (Exception e) {
-				Log.e(TAG, "Error while extracting file " + archive, e);
-				return false;
-			}
+            return true;
+        }
 
-			return true;
-		}
 
-		@Override
-		protected void onPostExecute(Boolean result) {
-			setChanged();
-			notifyObservers();
-		}
+        private void unzipEntry(ZipFile zipfile, ZipEntry entry,
+                                File outputDir) throws IOException {
 
-		private void unzipEntry(ZipFile zipfile, ZipEntry entry,
-		                        String outputDir) throws IOException {
-
-			if (entry.isDirectory()) {
+            if (entry.isDirectory()) {
                 new File(outputDir, entry.getName()).mkdir();
-				return;
-			}
+                return;
+            }
 
-			File outputFile = new File(outputDir, entry.getName());
-			if (!outputFile.getParentFile().exists()) {
+            File outputFile = new File(outputDir, entry.getName());
+            if (!outputFile.getParentFile().exists()) {
                 outputFile.getParentFile().mkdir();
-			}
+            }
 
-			Log.v(TAG, "Extracting: " + entry);
-			BufferedInputStream inputStream = new BufferedInputStream(zipfile.getInputStream(entry));
-			BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
+            Log.v(TAG, "Extracting: " + entry);
+            BufferedInputStream inputStream = new BufferedInputStream(zipfile.getInputStream(entry));
+            BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
-			int bufferLength;
-			byte[] buffer = new byte[1024];
-			while ((bufferLength = inputStream.read(buffer)) > 0) {
-				outputStream.write(buffer, 0, bufferLength);
-			}
-			outputStream.close();
-			inputStream.close();
-		}
-	}
+            int bufferLength;
+            byte[] buffer = new byte[1024];
+            while ((bufferLength = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, bufferLength);
+            }
+            outputStream.close();
+            inputStream.close();
+        }
+    }
 }

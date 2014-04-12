@@ -1,7 +1,7 @@
 package de.mkrtchyan.utils;
 
 /*
- * Copyright (c) 2013 Ashot Mkrtchyan
+ * Copyright (c) 2014 Ashot Mkrtchyan
  * Permission is hereby granted, free of charge, to any person obtaining a copy 
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights 
@@ -50,9 +50,9 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
     private String FileName;
     private File outputFile;
     private boolean checkFile = false;
-	private boolean overrideFile = false;
+    private boolean overrideFile = false;
     private boolean hide = false;
-	private boolean retry = false;
+    private boolean retry = false;
     private boolean cancelable = true;
     private File ChecksumFile = null;
     private Downloader thisDownloader = this;
@@ -68,28 +68,28 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
         this.outputFile = outputFile;
     }
 
-	public Downloader(Context mContext, String URL, String FileName, File outputFile, Runnable AfterDownload) {
-		this.mContext = mContext;
-		this.URL = URL;
-		this.FileName = FileName;
-		this.outputFile = outputFile;
-		this.AfterDownload = AfterDownload;
-	}
+    public Downloader(Context mContext, String URL, String FileName, File outputFile, Runnable AfterDownload) {
+        this.mContext = mContext;
+        this.URL = URL;
+        this.FileName = FileName;
+        this.outputFile = outputFile;
+        this.AfterDownload = AfterDownload;
+    }
 
-	public Downloader(Context mContext, String URL, File outputFile) {
-		this.mContext = mContext;
-		this.URL = URL;
-		this.FileName = outputFile.getName();
-		this.outputFile = outputFile;
-	}
+    public Downloader(Context mContext, String URL, File outputFile) {
+        this.mContext = mContext;
+        this.URL = URL;
+        this.FileName = outputFile.getName();
+        this.outputFile = outputFile;
+    }
 
-	public Downloader(Context mContext, String URL, File outputFile, Runnable AfterDownload) {
-		this.mContext = mContext;
-		this.URL = URL;
-		this.FileName = outputFile.getName();
-		this.outputFile = outputFile;
-		this.AfterDownload = AfterDownload;
-	}
+    public Downloader(Context mContext, String URL, File outputFile, Runnable AfterDownload) {
+        this.mContext = mContext;
+        this.URL = URL;
+        this.FileName = outputFile.getName();
+        this.outputFile = outputFile;
+        this.AfterDownload = AfterDownload;
+    }
 
     public void ask() {
         final Downloader thisDownloader = this;
@@ -240,9 +240,9 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
                 if (urlException != null)
                     Notifyer.showExceptionToast(mContext, TAG, urlException);
             }
-	        if (outputFile.delete() ||retry ) {
-		        loop();
-	        }
+            if (outputFile.delete() || retry) {
+                loop();
+            }
         }
 
     }
@@ -293,24 +293,32 @@ public class Downloader extends AsyncTask<Void, Integer, Boolean> {
         }
     }
 
-    public void setAfterDownload (Runnable AfterDownload) {
+    public void setAfterDownload(Runnable AfterDownload) {
         this.AfterDownload = AfterDownload;
     }
+
     public void setChecksumFile(File ChecksumFile) {
         this.ChecksumFile = ChecksumFile;
         checkFile = ChecksumFile != null;
     }
-	public void setOverrideFile(boolean overrideFile) {
-		this.overrideFile = overrideFile;
-	}
+
+    public void setOverrideFile(boolean overrideFile) {
+        this.overrideFile = overrideFile;
+    }
+
     public void setHidden(boolean hide) {
         this.hide = hide;
     }
-	public void setRetry (boolean retry) {
-		this.retry = retry;
-	}
+
+    public void setRetry(boolean retry) {
+        this.retry = retry;
+    }
+
     public void setCancelable(boolean cancelable) {
         this.cancelable = cancelable;
     }
-    public void setAskBeforeDownload(boolean askBeforeDownload) {this.askBeforeDownload = askBeforeDownload;}
+
+    public void setAskBeforeDownload(boolean askBeforeDownload) {
+        this.askBeforeDownload = askBeforeDownload;
+    }
 }
